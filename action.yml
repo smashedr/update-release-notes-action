@@ -1,0 +1,40 @@
+name: "Update Release Notes"
+description: "Update Release Notes Action"
+author: "Shane"
+branding:
+  icon: "activity"
+  color: "yellow"
+
+inputs:
+  tags:
+    description: "Release tags for notes"
+    required: true
+  location:
+    description: "Location to place notes"
+    required: true
+    default: "head"
+  delimiter:
+    description: "String where to insert notes"
+    required: false
+  remove:
+    description: "Remove delimiter after insert"
+    required: false
+    default: "false"
+  summary:
+    description: "Add Summary to Job"
+    required: false
+    default: "true"
+  token:
+    description: "GitHub Token"
+    required: true
+    default: ${{ github.token }}
+
+outputs:
+  body:
+    description: "Full Release Notes Body"
+  notes:
+    description: "Generated Release Notes"
+
+runs:
+  using: "node20"
+  main: "dist/index.js"
