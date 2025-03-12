@@ -20,19 +20,34 @@ const github = require('@actions/github')
         core.endGroup() // Inputs
 
         // Get Context
-        // const { owner, repo } = github.context.repo
-        const { owner, repo } = { owner: 'smashedr', repo: 'test-action' }
+        const { owner, repo } = github.context.repo
+        // const { owner, repo } = { owner: 'smashedr', repo: 'test-action' }
         core.info(`owner: ${owner}`)
         core.info(`repo: ${repo}`)
         const release_id = github.context.payload.release.id
         console.log('release_id:', release_id)
+        const tag_name = github.context.payload.release.tag_name
+        console.log('tag_name:', tag_name)
 
         core.info('⌛ Processing...')
 
         // Generate Notes
+        if (!inputs.tags.includes(tag_name)) {
+            console.log('Adding tag:', tag_name)
+            inputs.tags.push(tag_name)
+        }
         console.log('tags:', inputs.tags)
-        const notes = '```text\n' + `${inputs.tags.join('\n')}` + '\n```'
-        console.log('notes:', JSON.stringify(notes))
+
+        let images = []
+        for (const tag of inputs.tags) {
+            console.log('tag:', tag)
+            images.push(`${owner}/${repo}@${tag}`)
+        }
+        console.log('images:', JSON.stringify(images))
+
+        let notes = 'Use the latest version with one of these tags:\n\n'
+        notes += '```text\n' + `${images.join('\n')}` + '\n```'
+        console.log('notes:\n', JSON.stringify(notes))
 
         // Get Release
         const octokit = github.getOctokit(inputs.token)
@@ -42,7 +57,7 @@ const github = require('@actions/github')
             release_id,
         })
         // console.log('release:', release)
-        console.log('release.data.body:', JSON.stringify(release.data.body))
+        console.log('release.data.body:\n', JSON.stringify(release.data.body))
 
         // Generate Release Body
         let body
@@ -53,21 +68,21 @@ const github = require('@actions/github')
                 )
             }
             const [head, tail] = release.data.body.split(inputs.delimiter)
-            console.log('head:', head)
-            console.log('tail:', tail)
+            console.log('head:', JSON.stringify(head))
+            console.log('tail:', JSON.stringify(tail))
             if (inputs.remove) {
-                body = head + notes + tail
+                body = head + '\n\n' + notes + '\n\n' + tail
             } else if (inputs.location === 'head') {
-                body = head + notes + '\n' + inputs.delimiter + tail
+                body = head + '\n\n' + notes + '\n\n' + inputs.delimiter + tail
             } else {
-                body = head + inputs.delimiter + '\n' + notes + tail
+                body = head + inputs.delimiter + '\n\n' + notes + '\n\n' + tail
             }
         } else if (inputs.location === 'head') {
-            body = notes + '\n' + release.data.body
+            body = notes + '\n\n' + release.data.body
         } else {
-            body = release.data.body + '\n' + notes
+            body = release.data.body + '\n\n' + notes
         }
-        console.log('body:', body)
+        console.log('body:\n', body)
 
         // Update Release
         await octokit.rest.repos.updateRelease({

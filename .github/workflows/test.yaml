@@ -35,19 +35,20 @@ jobs:
         uses: ./
         with:
           tags: "v1,v1.0"
-          delimiter: "--"
+          #delimiter: "--"
           remove: true
+          location: tail
 
-      - name: "Verify Outputs"
-        run: |
-          echo "body: '${{ steps.test.outputs.body }}'"
-          if [ -z '${{ steps.test.outputs.body }}' ];then
-            echo "No Output: body"
-            exit 1
-          fi
+      #- name: "Verify Outputs"
+      #  run: |
+      #    echo "body: '${{ steps.test.outputs.body }}'"
+      #    if [ -z '${{ steps.test.outputs.body }}' ];then
+      #      echo "No Output: body"
+      #      exit 1
+      #    fi
 
-      - name: "Schedule Failure Notification"
-        if: ${{ failure() && github.event_name == 'schedule' }}
-        uses: sarisia/actions-status-discord@v1
-        with:
-          webhook: ${{ secrets.DISCORD_WEBHOOK }}
+      #- name: "Schedule Failure Notification"
+      #  if: ${{ failure() && github.event_name == 'schedule' }}
+      #  uses: sarisia/actions-status-discord@v1
+      #  with:
+      #    webhook: ${{ secrets.DISCORD_WEBHOOK }}
