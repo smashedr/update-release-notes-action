@@ -31841,6 +31841,9 @@ const github = __nccwpck_require__(3228)
         console.log(process.env)
         core.endGroup() // Debug process.env
 
+        console.log('github.context.ref:', github.context.ref)
+        console.log('GITHUB_REF_NAME:', process.env.GITHUB_REF_NAME)
+
         // Get Inputs
         const inputs = getInputs()
         core.startGroup('Parsed Inputs')
@@ -31868,7 +31871,7 @@ const github = __nccwpck_require__(3228)
 
         let images = []
         for (const tag of inputs.tags) {
-            console.log('tag:', tag)
+            // console.log('tag:', tag)
             images.push(`${owner}/${repo}@${tag}`)
         }
         console.log('images:', JSON.stringify(images))
