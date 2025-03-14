@@ -3,14 +3,14 @@
 
   "actor": "smashedr",
 
-  "ref": "refs/tags/v1.0.0",
-  "ref_name": "v1.0.0",
+  "ref": "refs/tags/v1.0.2",
+  "ref_name": "v1.0.2",
 
   "release": {
     "tag_name": "v1.0.2",
     "name": "v1.0.2",
-    "id": "205176024",
-    "prerelease": true,
+    "id": 205758737,
+    "prerelease": false,
     "draft": false
   },
 

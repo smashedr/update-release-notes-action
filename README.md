@@ -1,8 +1,9 @@
-[![Tags](https://img.shields.io/badge/tags-v1_%7C_v1.0-blue?logo=git&logoColor=white)](https://github.com/smashedr/update-release-notes-action/tags)
+[![GitHub Tag Major](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*&logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/smashedr/update-release-notes-action/tags)
+[![GitHub Tag Minor](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*.*&logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/smashedr/update-release-notes-action/tags)
 [![GitHub Release Version](https://img.shields.io/github/v/release/smashedr/update-release-notes-action?logo=git&logoColor=white&label=latest)](https://github.com/smashedr/update-release-notes-action/releases/latest)
-[![Release WF](https://img.shields.io/github/actions/workflow/status/smashedr/update-release-notes-action/release.yaml?logo=github&label=release)](https://github.com/smashedr/update-release-notes-action/actions/workflows/release.yaml)
-[![Test WF](https://img.shields.io/github/actions/workflow/status/smashedr/update-release-notes-action/test.yaml?logo=github&label=test)](https://github.com/smashedr/update-release-notes-action/actions/workflows/test.yaml)
-[![lint WF](https://img.shields.io/github/actions/workflow/status/smashedr/update-release-notes-action/lint.yaml?logo=github&label=lint)](https://github.com/smashedr/update-release-notes-action/actions/workflows/lint.yaml)
+[![Workflow Release](https://img.shields.io/github/actions/workflow/status/smashedr/update-release-notes-action/release.yaml?logo=github&label=release)](https://github.com/smashedr/update-release-notes-action/actions/workflows/release.yaml)
+[![Workflow Test](https://img.shields.io/github/actions/workflow/status/smashedr/update-release-notes-action/test.yaml?logo=github&label=test)](https://github.com/smashedr/update-release-notes-action/actions/workflows/test.yaml)
+[![Workflow lint](https://img.shields.io/github/actions/workflow/status/smashedr/update-release-notes-action/lint.yaml?logo=github&label=lint)](https://github.com/smashedr/update-release-notes-action/actions/workflows/lint.yaml)
 [![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=smashedr_update-release-notes-action&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=smashedr_update-release-notes-action)
 [![GitHub Last Commit](https://img.shields.io/github/last-commit/smashedr/update-release-notes-action?logo=github&label=updated)](https://github.com/smashedr/update-release-notes-action/graphs/commit-activity)
 [![Codeberg Last Commit](https://img.shields.io/gitea/last-commit/shaner/update-release-notes-action/master?gitea_url=https%3A%2F%2Fcodeberg.org%2F&logo=codeberg&logoColor=white&label=updated)](https://codeberg.org/shaner/update-release-notes-action)
@@ -18,6 +19,7 @@
   - [Permissions](#Permissions)
 - [Outputs](#Outputs)
 - [Examples](#Examples)
+- [Tags](#Tags)
 - [Support](#Support)
 - [Contributing](#Contributing)
 
@@ -25,14 +27,17 @@ Update Release Notes Action. One Day...
 
 ## Inputs
 
-| input     | required | default        | description                   |
-| --------- | :------: | -------------- | ----------------------------- |
-| tags      | **Yes**  | -              | Release Tags for Notes        |
-| location  |    -     | `head`         | Place at [`head`, `tail`]     |
-| delimiter |    -     | -              | String where to insert notes  |
-| remove    |    -     | `false`        | Remove delimiter after insert |
-| summary   |    -     | `true`         | Add Summary to Job            |
-| token     |    -     | `github.token` | For use with a PAT [^1]       |
+| Input       |   Type    | Default        | Description                           |
+| :---------- | :-------: | :------------- | :------------------------------------ |
+| `type`      |     -     | `actions`      | Type: [`actions`, `chrome-extension`] |
+| `tags`      | `actions` | -              | Release Tags for Notes                |
+| `location`  |     -     | `head`         | Place at [`head`, `tail`]             |
+| `delimiter` |     -     | -              | String where to insert notes          |
+| `remove`    |     -     | `false`        | Remove delimiter after insert         |
+| `summary`   |     -     | `true`         | Add Summary to Job                    |
+| `token`     |     -     | `github.token` | For use with a PAT [^1]               |
+
+**type:** The type is parsed from the repository topics if not provided.
 
 <details><summary>👀 View Example Job Summary</summary>
 
@@ -62,8 +67,8 @@ permissions:
 
 ## Outputs
 
-| output | description             |
-| ------ | ----------------------- |
+| Output | Description             |
+| :----- | :---------------------- |
 | body   | Full Release Notes Body |
 | notes  | Generated Release Notes |
 
@@ -80,6 +85,18 @@ permissions:
 ## Examples
 
 Coming Soon...
+
+## Tags
+
+The following rolling [tags](https://github.com/smashedr/update-release-notes-action/tags) are maintained.
+
+| Version&nbsp;Tag                                                                                                                                                                                                                             | Rolling | Bugs | Feat. | Target   | Example  |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----: | :--: | :---: | :------- | :------- |
+| [![GitHub Tag Major](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*&style=for-the-badge&label=%20&color=44cc10)](https://github.com/smashedr/update-release-notes-action/releases/latest) |   ✅    |  ✅  |  ✅   | `vN.x.x` | `vN`     |
+| [![GitHub Tag Minor](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*.*&style=for-the-badge&label=%20&color=blue)](https://github.com/smashedr/update-release-notes-action/releases/latest) |   ✅    |  ✅  |  ❌   | `vN.N.x` | `vN.N`   |
+| [![GitHub Release](https://img.shields.io/github/v/release/smashedr/update-release-notes-action?style=for-the-badge&label=%20&color=red)](https://github.com/smashedr/update-release-notes-action/releases/latest)                           |   ❌    |  ❌  |  ❌   | `vN.N.N` | `vN.N.N` |
+
+You can view the release notes for each version on the [releases](https://github.com/smashedr/update-release-notes-action/releases) page.
 
 # Support
 
