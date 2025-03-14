@@ -29,13 +29,15 @@ Update Release Notes Action. One Day...
 
 | Input       |   Type    | Default        | Description                           |
 | :---------- | :-------: | :------------- | :------------------------------------ |
-| `type`      |     -     | `actions`      | Type: [`actions`, `chrome-extension`] |
-| `tags`      | `actions` | -              | Release Tags for Notes                |
 | `location`  |     -     | `head`         | Place at [`head`, `tail`]             |
 | `delimiter` |     -     | -              | String where to insert notes          |
 | `remove`    |     -     | `false`        | Remove delimiter after insert         |
 | `summary`   |     -     | `true`         | Add Summary to Job                    |
 | `token`     |     -     | `github.token` | For use with a PAT [^1]               |
+| `type`      |     -     | `actions`      | Type: [`actions`, `chrome-extension`] |
+| `tags`**¹** | `actions` | -              | Actions Tags for Uses                 |
+
+> **¹** Actions Option Only
 
 **type:** The type is parsed from the repository topics if not provided.
 
@@ -43,7 +45,7 @@ Update Release Notes Action. One Day...
 
 ---
 
-🚀 Use the latest version with one of these tags:
+🚀 Use this release with tags:
 
 ```text
 smashedr/test-workflows@v1
@@ -51,7 +53,7 @@ smashedr/test-workflows@v1.0
 smashedr/test-workflows@v1.0.2
 ```
 
-❤️ Please [report any issues](https://github.com/smashedr/test-workflows/issues) you encounter...
+❤️ Please [report any issues](https://github.com/smashedr/test-workflows/issues) you find.
 
 ---
 
