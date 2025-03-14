@@ -40295,8 +40295,8 @@ const Handlebars = __nccwpck_require__(8508)
         console.log('GITHUB_REF_NAME:', process.env.GITHUB_REF_NAME)
         console.log('github.context.ref:', github.context.ref)
         console.log('github.context.eventName:', github.context.eventName)
-        const topics = github.context.payload.repository.topics
-        console.log('topics:', topics)
+        // const topics = github.context.payload.repository.topics
+        // console.log('topics:', topics)
         core.endGroup() // Debug
 
         if (github.context.eventName !== 'release') {
@@ -40312,66 +40312,35 @@ const Handlebars = __nccwpck_require__(8508)
         console.log(config)
         core.endGroup() // Config
 
-        if (!config.type) {
-            if (topics.includes('actions')) {
-                config.type = 'actions'
-            } else if (topics.includes('chrome-extension')) {
-                config.type = 'chrome-extension'
-            }
-            if (!config.type) {
-                return core.warning(`Unable to parse type from topics.`)
-            }
-        }
-
         core.info(`⌛ Processing type: \u001b[33;1m${config.type}`)
-
-        // Get Context
-        // const { owner, repo } = github.context.repo
-        // core.info(`owner: ${owner}`)
-        // core.info(`repo: ${repo}`)
-        // const release_id = github.context.payload.release.id
-        // console.log('release_id:', release_id)
-        // const tag_name = github.context.payload.release.tag_name
-        // console.log('tag_name:', tag_name)
 
         const octokit = github.getOctokit(config.token)
 
+        // // Get Release
+        // const release = await octokit.rest.repos.getRelease({
+        //     owner,
+        //     repo,
+        //     release_id,
+        // })
+        // // console.log('release:', release)
+        // console.log('release.data.body:\n', JSON.stringify(release.data.body))
+
         // Get Releases
-        const releases = await octokit.rest.repos.listReleases({
-            ...config.repo,
-        })
-        core.startGroup('Last 30 Releases')
-        console.log(releases.data)
-        core.endGroup() // Releases
+        const [current, previous] = await getReleases(config, octokit)
 
-        let previousRelease
-        let currentRelease
-        let found = 0
-        for (const release of releases.data) {
-            // console.debug('release:', release)
-            if (found) {
-                previousRelease = release
-                break
-            }
-            if (release.id === config.release_id) {
-                currentRelease = release
-                found = 1
-            }
-        }
-
-        core.startGroup('Previous Releases')
-        console.log(previousRelease)
+        core.startGroup('Previous Releases (not used)')
+        console.log(previous)
         core.endGroup() // Previous Releases
 
         core.startGroup('Current Releases')
-        console.log(currentRelease)
+        console.log(current)
         core.endGroup() // Current Releases
 
-        if (!currentRelease) {
+        if (!current) {
             return core.setFailed('Current Release Not Found!')
         }
         core.startGroup('Current Release Body')
-        core.info(currentRelease.body)
+        core.info(current.body)
         core.endGroup() // Current Release Body
 
         // Generate Additional Notes
@@ -40389,40 +40358,9 @@ const Handlebars = __nccwpck_require__(8508)
         core.info(notes)
         core.endGroup() // New Release Notes
 
-        // // Get Release
-        // const release = await octokit.rest.repos.getRelease({
-        //     owner,
-        //     repo,
-        //     release_id,
-        // })
-        // // console.log('release:', release)
-        // console.log('release.data.body:\n', JSON.stringify(release.data.body))
-
         // Update Release Body
-        let body
-        if (config.delimiter) {
-            if (!currentRelease.body.includes(config.delimiter)) {
-                return core.setFailed(
-                    `Delimiter not found in release body: ${config.delimiter}`
-                )
-            }
-            const [head, tail] = currentRelease.body.split(config.delimiter)
-            console.log('head:', JSON.stringify(head))
-            console.log('tail:', JSON.stringify(tail))
-            if (config.remove) {
-                body = head + '\n\n' + notes + '\n\n' + tail
-            } else if (config.location === 'head') {
-                body = head + '\n\n' + notes + '\n\n' + config.delimiter + tail
-            } else {
-                body = head + config.delimiter + '\n\n' + notes + '\n\n' + tail
-            }
-        } else if (config.location === 'head') {
-            body = notes + '\n\n' + currentRelease.body
-        } else {
-            body = currentRelease.body + '\n\n' + notes
-        }
-        // console.log('updated release body:\n', body)
         core.startGroup('New Release Body')
+        const body = updateBody(config, current.body, notes)
         core.info(body)
         core.endGroup()
 
@@ -40490,13 +40428,82 @@ function addIssueNotes() {
     return `\n❤️ Please [report any issues](${url}) you find.`
 }
 
+function updateBody(config, body, notes) {
+    let result
+    if (config.delimiter) {
+        if (!body.includes(config.delimiter)) {
+            throw new Error(
+                `Delimiter not found in release body: ${config.delimiter}`
+            )
+        }
+        const [head, tail] = body.split(config.delimiter)
+        console.log('head:', JSON.stringify(head))
+        console.log('tail:', JSON.stringify(tail))
+        if (config.remove) {
+            result = head + '\n\n' + notes + '\n\n' + tail
+        } else if (config.location === 'head') {
+            result = head + '\n\n' + notes + '\n\n' + config.delimiter + tail
+        } else {
+            result = head + config.delimiter + '\n\n' + notes + '\n\n' + tail
+        }
+    } else if (config.location === 'head') {
+        result = notes + '\n\n' + body
+    } else {
+        result = body + '\n\n' + notes
+    }
+    // console.log('updated release body:\n', result)
+    return result
+}
+
+/**
+ * Get Current and Previous Release
+ * @param config
+ * @param octokit
+ * @return {Promise<[Object, Object]>}
+ */
+async function getReleases(config, octokit) {
+    const releases = await octokit.rest.repos.listReleases({
+        ...config.repo,
+    })
+    core.startGroup('Last 30 Releases (debugging)')
+    console.log(releases.data)
+    core.endGroup() // Releases
+
+    let previous
+    let current
+    let found = 0
+    for (const release of releases.data) {
+        // console.debug('release:', release)
+        if (found) {
+            previous = release
+            break
+        }
+        if (release.id === config.release_id) {
+            current = release
+            found = 1
+        }
+    }
+    return [current, previous]
+}
+
 /**
  * Get Config
- * @return {{type: string, tags: string[], location: string, delimiter: string, remove: boolean, summary: boolean, token: string, release_id: number, tag_name: string, repo: {owner: string, repo: string}}}
+ * @return {{ tags: string[], location: string, delimiter: string, remove: boolean, summary: boolean, token: string, release_id: number, tag_name: string, repo: {owner: string, repo: string}, topics: string[], type: string }}
  */
 function getConfig() {
+    const topics = github.context.payload.repository.topics
+    let type = core.getInput('type')
+    if (!type) {
+        if (topics.includes('actions')) {
+            type = 'actions'
+        } else if (topics.includes('chrome-extension')) {
+            type = 'chrome-extension'
+        }
+        if (!type) {
+            throw new Error(`Unable to parse type from topics.`)
+        }
+    }
     return {
-        type: core.getInput('type'),
         tags: core.getInput('tags', { required: true }).split(','),
         location: core.getInput('location', { required: true }),
         delimiter: core.getInput('delimiter'),
@@ -40508,6 +40515,8 @@ function getConfig() {
         tag_name: github.context.payload.release.tag_name,
         // repo: { ...github.context.repo },
         repo: { owner: 'smashedr', repo: 'test-workflows' }, // TODO DEBUG REMOVE
+        topics,
+        type,
     }
 }
 
