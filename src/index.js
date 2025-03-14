@@ -41,53 +41,33 @@ import { action } from './templates'
 
         core.info(`⌛ Processing type: \u001b[33;1m${config.type}`)
 
-        // // Get Context
-        // const { owner, repo } = github.context.repo
-        // core.info(`owner: ${owner}`)
-        // core.info(`repo: ${repo}`)
-        // const release_id = github.context.payload.release.id
-        // console.log('release_id:', release_id)
-        // const tag_name = github.context.payload.release.tag_name
-        // console.log('tag_name:', tag_name)
-
         const octokit = github.getOctokit(config.token)
 
-        // Get Releases
-        const releases = await octokit.rest.repos.listReleases({
-            ...config.repo,
-        })
-        core.startGroup('Last 30 Releases (debugging)')
-        console.log(releases.data)
-        core.endGroup() // Releases
+        // // Get Release
+        // const release = await octokit.rest.repos.getRelease({
+        //     owner,
+        //     repo,
+        //     release_id,
+        // })
+        // // console.log('release:', release)
+        // console.log('release.data.body:\n', JSON.stringify(release.data.body))
 
-        let previousRelease
-        let currentRelease
-        let found = 0
-        for (const release of releases.data) {
-            // console.debug('release:', release)
-            if (found) {
-                previousRelease = release
-                break
-            }
-            if (release.id === config.release_id) {
-                currentRelease = release
-                found = 1
-            }
-        }
+        // Get Releases
+        const [current, previous] = await getReleases(config, octokit)
 
         core.startGroup('Previous Releases (not used)')
-        console.log(previousRelease)
+        console.log(previous)
         core.endGroup() // Previous Releases
 
         core.startGroup('Current Releases')
-        console.log(currentRelease)
+        console.log(current)
         core.endGroup() // Current Releases
 
-        if (!currentRelease) {
+        if (!current) {
             return core.setFailed('Current Release Not Found!')
         }
         core.startGroup('Current Release Body')
-        core.info(currentRelease.body)
+        core.info(current.body)
         core.endGroup() // Current Release Body
 
         // Generate Additional Notes
@@ -105,18 +85,9 @@ import { action } from './templates'
         core.info(notes)
         core.endGroup() // New Release Notes
 
-        // // Get Release
-        // const release = await octokit.rest.repos.getRelease({
-        //     owner,
-        //     repo,
-        //     release_id,
-        // })
-        // // console.log('release:', release)
-        // console.log('release.data.body:\n', JSON.stringify(release.data.body))
-
         // Update Release Body
         core.startGroup('New Release Body')
-        const body = updateBody(config, currentRelease.body, notes)
+        const body = updateBody(config, current.body, notes)
         core.info(body)
         core.endGroup()
 
@@ -188,7 +159,7 @@ function updateBody(config, body, notes) {
     let result
     if (config.delimiter) {
         if (!body.includes(config.delimiter)) {
-            return core.setFailed(
+            throw new Error(
                 `Delimiter not found in release body: ${config.delimiter}`
             )
         }
@@ -209,6 +180,37 @@ function updateBody(config, body, notes) {
     }
     // console.log('updated release body:\n', result)
     return result
+}
+
+/**
+ * Get Current and Previous Release
+ * @param config
+ * @param octokit
+ * @return {Promise<[Object, Object]>}
+ */
+async function getReleases(config, octokit) {
+    const releases = await octokit.rest.repos.listReleases({
+        ...config.repo,
+    })
+    core.startGroup('Last 30 Releases (debugging)')
+    console.log(releases.data)
+    core.endGroup() // Releases
+
+    let previous
+    let current
+    let found = 0
+    for (const release of releases.data) {
+        // console.debug('release:', release)
+        if (found) {
+            previous = release
+            break
+        }
+        if (release.id === config.release_id) {
+            current = release
+            found = 1
+        }
+    }
+    return [current, previous]
 }
 
 /**
