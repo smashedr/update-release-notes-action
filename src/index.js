@@ -35,8 +35,6 @@ const github = require('@actions/github')
         console.log(config)
         core.endGroup() // Config
 
-        core.info('⌛ Processing...')
-
         if (!config.type) {
             if (topics.includes('actions')) {
                 config.type = 'actions'
@@ -47,7 +45,8 @@ const github = require('@actions/github')
                 return core.warning(`Unable to parse type from topics.`)
             }
         }
-        console.log('config.type:', config.type)
+
+        core.info(`⌛ Processing type: ${config.type}`)
 
         // Get Context
         // const { owner, repo } = github.context.repo
@@ -64,7 +63,9 @@ const github = require('@actions/github')
         const releases = await octokit.rest.repos.listReleases({
             ...config.repo,
         })
-        // console.debug('releases:', releases.data)
+        core.startGroup('Last 30 Releases')
+        console.log('releases.data:', releases.data)
+        core.endGroup() // Releases
         let previousRelease
         let currentRelease
         let found = 0
@@ -79,10 +80,14 @@ const github = require('@actions/github')
                 found = 1
             }
         }
-        core.startGroup('Previous and Current Releases')
+
+        core.startGroup('Previous Releases')
         console.log('previousRelease:', previousRelease)
+        core.endGroup() // Previous Releases
+
+        core.startGroup('Current Releases')
         console.log('currentRelease:', currentRelease)
-        core.endGroup() // Releases
+        core.endGroup() // Current Releases
 
         if (!currentRelease) {
             return core.setFailed('Current Release Not Found!')
@@ -92,6 +97,7 @@ const github = require('@actions/github')
         core.endGroup() // Previous Release Body
 
         // Generate Additional Notes
+        core.startGroup(`Generate Notes for: ${config.type}`)
         let notes
         if (config.type === 'actions') {
             notes = genActionsNotes(config)
@@ -99,8 +105,9 @@ const github = require('@actions/github')
             return core.setFailed('Not Yet Implemented: chrome-extension')
         }
         notes += addIssueNotes()
+        core.endGroup() // Generate Notes
 
-        core.startGroup('New Release Notes')
+        core.startGroup('Generated Release Notes')
         core.info(notes)
         core.endGroup() // New Release Notes
 
@@ -224,9 +231,9 @@ function getConfig() {
  * @return {Promise<void>}
  */
 async function addSummary(config, body) {
-    core.summary.addRaw('## Update Release Notes Action\n')
-    core.summary.addRaw('🚀 We Did Something...\n')
-    core.summary.addDetails('Release Notes', `\n\n${body}\n\n`)
+    core.summary.addRaw('## Update Release Notes Action\n\n')
+    core.summary.addRaw('🚀 We Did It Red It!\n\n')
+    core.summary.addDetails('Release Notes', `\n\n---\n\n${body}\n\n---\n\n`)
 
     delete config.token
     const yaml = Object.entries(config)
