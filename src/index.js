@@ -46,7 +46,7 @@ const github = require('@actions/github')
             }
         }
 
-        core.info(`⌛ Processing type: ${config.type}`)
+        core.info(`⌛ Processing type: \u001b[33;1m${config.type}`)
 
         // Get Context
         // const { owner, repo } = github.context.repo
@@ -64,8 +64,9 @@ const github = require('@actions/github')
             ...config.repo,
         })
         core.startGroup('Last 30 Releases')
-        console.log('releases.data:', releases.data)
+        console.log(releases.data)
         core.endGroup() // Releases
+
         let previousRelease
         let currentRelease
         let found = 0
@@ -82,11 +83,11 @@ const github = require('@actions/github')
         }
 
         core.startGroup('Previous Releases')
-        console.log('previousRelease:', previousRelease)
+        console.log(previousRelease)
         core.endGroup() // Previous Releases
 
         core.startGroup('Current Releases')
-        console.log('currentRelease:', currentRelease)
+        console.log(currentRelease)
         core.endGroup() // Current Releases
 
         if (!currentRelease) {

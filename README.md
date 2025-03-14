@@ -39,11 +39,59 @@ Update Release Notes Action. One Day...
 
 **type:** The type is parsed from the repository topics if not provided.
 
+<details><summary>👀 View Example Notes for Type: actions</summary>
+
+---
+
+🚀 Use the latest version with one of these tags:
+
+```text
+smashedr/test-workflows@v1
+smashedr/test-workflows@v1.0
+smashedr/test-workflows@v1.0.2
+```
+
+❤️ Please [report any issues](https://github.com/smashedr/test-workflows/issues) you encounter...
+
+---
+
+</details>
+
 <details><summary>👀 View Example Job Summary</summary>
 
 ---
 
-Coming Soon...
+🚀 We Did It Red It!
+
+<details><summary>Release Notes</summary>
+
+---
+
+**Full Changelog**: https://github.com/smashedr/test-workflows/compare/v1.0.1...v1.0.2
+
+🚀 Use the latest version with one of these tags:
+
+```text
+smashedr/test-workflows@v1
+smashedr/test-workflows@v1.0
+smashedr/test-workflows@v1.0.2
+```
+
+❤️ Please [report any issues](https://github.com/smashedr/test-workflows/issues) you encounter...
+
+---
+
+</details>
+<details><summary>Config</summary><pre lang="yaml"><code>type: "actions"
+tags: ["v1","v1.0","v1.0.2"]
+location: "tail"
+delimiter: ""
+remove: false
+summary: true
+release_id: 205787094
+tag_name: "v1.0.2"
+repo: {"owner":"smashedr","repo":"test-workflows"}</code></pre>
+</details>
 
 ---
 
