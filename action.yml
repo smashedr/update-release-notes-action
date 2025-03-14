@@ -6,13 +6,6 @@ branding:
   color: "yellow"
 
 inputs:
-  type:
-    description: "Update Type"
-    required: false
-    default: "actions"
-  tags:
-    description: "Release tags for notes"
-    required: false
   location:
     description: "Location to place notes"
     required: false
@@ -32,6 +25,13 @@ inputs:
     description: "GitHub Token"
     required: false
     default: ${{ github.token }}
+  type:
+    description: "Update Type"
+    required: false
+    default: "actions"
+  tags:
+    description: "Actions Tags"
+    required: false
 
 outputs:
   body:

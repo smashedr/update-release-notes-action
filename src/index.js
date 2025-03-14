@@ -1,6 +1,10 @@
 const core = require('@actions/core')
 const github = require('@actions/github')
+const Handlebars = require('handlebars')
 
+import { action } from './templates'
+
+// main
 ;(async () => {
     try {
         core.info(`🏳️ Starting Update Release Notes Action`)
@@ -93,9 +97,9 @@ const github = require('@actions/github')
         if (!currentRelease) {
             return core.setFailed('Current Release Not Found!')
         }
-        core.startGroup('Previous Release Body')
+        core.startGroup('Current Release Body')
         core.info(currentRelease.body)
-        core.endGroup() // Previous Release Body
+        core.endGroup() // Current Release Body
 
         // Generate Additional Notes
         core.startGroup(`Generate Notes for: ${config.type}`)
@@ -185,23 +189,32 @@ function genActionsNotes(config) {
         console.log('Adding tag:', config.tag_name)
         config.tags.push(config.tag_name)
     }
-    console.log('config.tags:', config.tags)
 
-    let images = []
-    for (const tag of config.tags) {
-        // console.log('tag:', tag)
-        images.push(`${config.repo.owner}/${config.repo.repo}@${tag}`)
+    const data = {
+        action: `${config.repo.owner}/${config.repo.repo}`,
+        tags: config.tags,
     }
-    console.log('images:', images)
+    console.log('data:', data)
+    const template = Handlebars.compile(action)
+    const result = template(data)
+    console.log('result:', result)
+    return result
 
-    let notes = '🚀 Use the latest version with one of these tags:\n\n'
-    notes += '```text\n' + `${images.join('\n')}` + '\n```'
-    return notes
+    // let images = []
+    // for (const tag of config.tags) {
+    //     console.log('tag:', tag)
+    //     images.push(`${config.repo.owner}/${config.repo.repo}@${tag}`)
+    // }
+    // console.log('images:', images)
+    //
+    // let notes = '🚀 Use this release one of these tags:\n\n'
+    // notes += '```text\n' + `${images.join('\n')}` + '\n```'
+    // return notes
 }
 
 function addIssueNotes() {
     const url = `${github.context.payload.repository.html_url}/issues`
-    return `\n\n❤️ Please [report any issues](${url}) you encounter...`
+    return `\n❤️ Please [report any issues](${url}) you find.`
 }
 
 /**
@@ -220,8 +233,8 @@ function getConfig() {
 
         release_id: github.context.payload.release.id,
         tag_name: github.context.payload.release.tag_name,
-        repo: { ...github.context.repo },
-        // repo: { owner: 'smashedr', repo: 'test-workflows' },
+        // repo: { ...github.context.repo },
+        repo: { owner: 'smashedr', repo: 'test-workflows' }, // TODO DEBUG REMOVE
     }
 }
 
