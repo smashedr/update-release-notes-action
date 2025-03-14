@@ -40513,8 +40513,8 @@ function getConfig() {
 
         release_id: github.context.payload.release.id,
         tag_name: github.context.payload.release.tag_name,
-        // repo: { ...github.context.repo },
-        repo: { owner: 'smashedr', repo: 'test-workflows' }, // TODO DEBUG REMOVE
+        repo: { ...github.context.repo },
+        // repo: { owner: 'smashedr', repo: 'test-workflows' },
         topics,
         type,
     }
