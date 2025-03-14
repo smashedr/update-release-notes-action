@@ -22,8 +22,8 @@ import { action } from './templates'
         console.log('GITHUB_REF_NAME:', process.env.GITHUB_REF_NAME)
         console.log('github.context.ref:', github.context.ref)
         console.log('github.context.eventName:', github.context.eventName)
-        const topics = github.context.payload.repository.topics
-        console.log('topics:', topics)
+        // const topics = github.context.payload.repository.topics
+        // console.log('topics:', topics)
         core.endGroup() // Debug
 
         if (github.context.eventName !== 'release') {
@@ -39,20 +39,9 @@ import { action } from './templates'
         console.log(config)
         core.endGroup() // Config
 
-        if (!config.type) {
-            if (topics.includes('actions')) {
-                config.type = 'actions'
-            } else if (topics.includes('chrome-extension')) {
-                config.type = 'chrome-extension'
-            }
-            if (!config.type) {
-                return core.warning(`Unable to parse type from topics.`)
-            }
-        }
-
         core.info(`⌛ Processing type: \u001b[33;1m${config.type}`)
 
-        // Get Context
+        // // Get Context
         // const { owner, repo } = github.context.repo
         // core.info(`owner: ${owner}`)
         // core.info(`repo: ${repo}`)
@@ -224,11 +213,22 @@ function updateBody(config, body, notes) {
 
 /**
  * Get Config
- * @return {{type: string, tags: string[], location: string, delimiter: string, remove: boolean, summary: boolean, token: string, release_id: number, tag_name: string, repo: {owner: string, repo: string}}}
+ * @return {{ tags: string[], location: string, delimiter: string, remove: boolean, summary: boolean, token: string, release_id: number, tag_name: string, repo: {owner: string, repo: string}, topics: string[], type: string }}
  */
 function getConfig() {
+    const topics = github.context.payload.repository.topics
+    let type = core.getInput('type')
+    if (!type) {
+        if (topics.includes('actions')) {
+            type = 'actions'
+        } else if (topics.includes('chrome-extension')) {
+            type = 'chrome-extension'
+        }
+        if (!type) {
+            throw new Error(`Unable to parse type from topics.`)
+        }
+    }
     return {
-        type: core.getInput('type'),
         tags: core.getInput('tags', { required: true }).split(','),
         location: core.getInput('location', { required: true }),
         delimiter: core.getInput('delimiter'),
@@ -240,6 +240,8 @@ function getConfig() {
         tag_name: github.context.payload.release.tag_name,
         // repo: { ...github.context.repo },
         repo: { owner: 'smashedr', repo: 'test-workflows' }, // TODO DEBUG REMOVE
+        topics,
+        type,
     }
 }
 
