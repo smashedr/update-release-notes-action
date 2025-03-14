@@ -67,7 +67,7 @@ import { action } from './templates'
         const releases = await octokit.rest.repos.listReleases({
             ...config.repo,
         })
-        core.startGroup('Last 30 Releases')
+        core.startGroup('Last 30 Releases (debugging)')
         console.log(releases.data)
         core.endGroup() // Releases
 
@@ -86,7 +86,7 @@ import { action } from './templates'
             }
         }
 
-        core.startGroup('Previous Releases')
+        core.startGroup('Previous Releases (not used)')
         console.log(previousRelease)
         core.endGroup() // Previous Releases
 
@@ -126,30 +126,8 @@ import { action } from './templates'
         // console.log('release.data.body:\n', JSON.stringify(release.data.body))
 
         // Update Release Body
-        let body
-        if (config.delimiter) {
-            if (!currentRelease.body.includes(config.delimiter)) {
-                return core.setFailed(
-                    `Delimiter not found in release body: ${config.delimiter}`
-                )
-            }
-            const [head, tail] = currentRelease.body.split(config.delimiter)
-            console.log('head:', JSON.stringify(head))
-            console.log('tail:', JSON.stringify(tail))
-            if (config.remove) {
-                body = head + '\n\n' + notes + '\n\n' + tail
-            } else if (config.location === 'head') {
-                body = head + '\n\n' + notes + '\n\n' + config.delimiter + tail
-            } else {
-                body = head + config.delimiter + '\n\n' + notes + '\n\n' + tail
-            }
-        } else if (config.location === 'head') {
-            body = notes + '\n\n' + currentRelease.body
-        } else {
-            body = currentRelease.body + '\n\n' + notes
-        }
-        // console.log('updated release body:\n', body)
         core.startGroup('New Release Body')
+        const body = updateBody(config, currentRelease.body, notes)
         core.info(body)
         core.endGroup()
 
@@ -215,6 +193,33 @@ function genActionsNotes(config) {
 function addIssueNotes() {
     const url = `${github.context.payload.repository.html_url}/issues`
     return `\n❤️ Please [report any issues](${url}) you find.`
+}
+
+function updateBody(config, body, notes) {
+    let result
+    if (config.delimiter) {
+        if (!body.includes(config.delimiter)) {
+            return core.setFailed(
+                `Delimiter not found in release body: ${config.delimiter}`
+            )
+        }
+        const [head, tail] = body.split(config.delimiter)
+        console.log('head:', JSON.stringify(head))
+        console.log('tail:', JSON.stringify(tail))
+        if (config.remove) {
+            result = head + '\n\n' + notes + '\n\n' + tail
+        } else if (config.location === 'head') {
+            result = head + '\n\n' + notes + '\n\n' + config.delimiter + tail
+        } else {
+            result = head + config.delimiter + '\n\n' + notes + '\n\n' + tail
+        }
+    } else if (config.location === 'head') {
+        result = notes + '\n\n' + body
+    } else {
+        result = body + '\n\n' + notes
+    }
+    // console.log('updated release body:\n', result)
+    return result
 }
 
 /**
