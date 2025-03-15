@@ -134,7 +134,40 @@ permissions:
 
 ## Examples
 
-Coming Soon...
+This is the [release.yaml](.github/workflows/release.yaml) workflow used by this Action.
+
+```yaml
+name: 'Release'
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    name: 'Release'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - name: 'Update Tags'
+        id: tags
+        uses: cssnr/update-version-tags-action@v1
+
+      - name: 'Debug Tags'
+        run: |
+          echo "github.ref_name: ${{ github.ref_name }}"
+          echo "steps.tags.outputs.tags: ${{ steps.tags.outputs.tags }}"
+
+      - name: 'Update Release Notes Action'
+        uses: smashedr/update-release-notes-action@master
+        continue-on-error: true
+        with:
+          tags: ${{ steps.tags.outputs.tags }}
+          location: tail
+```
 
 ## Tags
 

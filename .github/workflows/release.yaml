@@ -26,5 +26,5 @@ jobs:
         uses: smashedr/update-release-notes-action@master
         continue-on-error: true
         with:
-          tags: "${{ steps.tags.outputs.tags }}"
+          tags: ${{ steps.tags.outputs.tags }}
           location: tail
