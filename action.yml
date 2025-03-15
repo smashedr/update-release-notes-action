@@ -29,6 +29,10 @@ inputs:
     description: "Update Type"
     required: false
     default: "actions"
+  issues:
+    description: "Issues Link"
+    required: false
+    default: "true"
   tags:
     description: "Actions Tags"
     required: false

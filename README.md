@@ -35,9 +35,8 @@ Update Release Notes Action. One Day...
 | `summary`   |     -     | `true`         | Add Summary to Job                    |
 | `token`     |     -     | `github.token` | For use with a PAT [^1]               |
 | `type`      |     -     | `actions`      | Type: [`actions`, `chrome-extension`] |
-| `tags`**¹** | `actions` | -              | Actions Tags for Uses                 |
-
-> **¹** Actions Option Only
+| `issues`    |   `all`   | `true`         | Append an Issues Link                 |
+| `tags`      | `actions` | -              | Actions Tags for Uses                 |
 
 **type:** The type is parsed from the repository topics if not provided.
 
@@ -99,7 +98,7 @@ repo: {"owner":"smashedr","repo":"test-workflows"}</code></pre>
 
 </details>
 
-With no inputs this will do something. Soon...
+With no inputs this will append a link to report issues.
 
 ```yaml
 - name: 'Update Release Notes Action'

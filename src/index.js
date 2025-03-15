@@ -76,9 +76,12 @@ import { action } from './templates'
         if (config.type === 'actions') {
             notes = genActionsNotes(config)
         } else if (config.type === 'chrome-extension') {
-            return core.setFailed('Not Yet Implemented: chrome-extension')
+            core.warning('Not Yet Implemented: chrome-extension')
         }
-        notes += addIssueNotes()
+        if (config.issues) {
+            core.info('Appending Issue Link to Notes')
+            notes += addIssueNotes()
+        }
         core.endGroup() // Generate Notes
 
         core.startGroup('Generated Release Notes')
@@ -215,7 +218,7 @@ async function getReleases(config, octokit) {
 
 /**
  * Get Config
- * @return {{ tags: string[], location: string, delimiter: string, remove: boolean, summary: boolean, token: string, release_id: number, tag_name: string, repo: {owner: string, repo: string}, topics: string[], type: string }}
+ * @return {{ tags: string[], location: string, delimiter: string, issues: boolean, remove: boolean, summary: boolean, token: string, release_id: number, tag_name: string, repo: {owner: string, repo: string}, topics: string[], type: string }}
  */
 function getConfig() {
     const topics = github.context.payload.repository.topics
@@ -234,6 +237,7 @@ function getConfig() {
         tags: core.getInput('tags', { required: true }).split(','),
         location: core.getInput('location', { required: true }),
         delimiter: core.getInput('delimiter'),
+        issues: core.getBooleanInput('issues'),
         remove: core.getBooleanInput('remove'),
         summary: core.getBooleanInput('summary'),
         token: core.getInput('token', { required: true }),
