@@ -66,6 +66,7 @@ import { action } from './templates'
         if (!current) {
             return core.setFailed('Current Release Not Found!')
         }
+
         core.startGroup('Current Release Body')
         core.info(current.body)
         core.endGroup() // Current Release Body
@@ -189,7 +190,7 @@ function updateBody(config, body, notes) {
  * Get Current and Previous Release
  * @param config
  * @param octokit
- * @return {Promise<[Object, Object]>}
+ * @return {Promise<[Object|undefined, Object|undefined]>}
  */
 async function getReleases(config, octokit) {
     const releases = await octokit.rest.repos.listReleases({

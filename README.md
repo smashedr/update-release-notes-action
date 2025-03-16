@@ -27,16 +27,16 @@ Update Release Notes Action. One Day...
 
 ## Inputs
 
-| Input       |   Type    | Default        | Description                           |
-| :---------- | :-------: | :------------- | :------------------------------------ |
-| `location`  |     -     | `head`         | Place at [`head`, `tail`]             |
-| `delimiter` |     -     | -              | String where to insert notes          |
-| `remove`    |     -     | `false`        | Remove delimiter after insert         |
-| `summary`   |     -     | `true`         | Add Summary to Job                    |
-| `token`     |     -     | `github.token` | For use with a PAT [^1]               |
-| `type`      |     -     | `actions`      | Type: [`actions`, `chrome-extension`] |
-| `issues`    |   `all`   | `true`         | Append an Issues Link                 |
-| `tags`      | `actions` | -              | Actions Tags for Uses                 |
+| Input     |   Type    | Default&nbsp;Value | Input&nbsp;Description                |
+| :-------- | :-------: | :----------------- | :------------------------------------ |
+| location  |     -     | `head`             | Place at [`head`, `tail`]             |
+| delimiter |     -     | -                  | String where to insert notes          |
+| remove    |     -     | `false`            | Remove delimiter after insert         |
+| summary   |     -     | `true`             | Add Summary to Job                    |
+| token     |     -     | `github.token`     | For use with a PAT [^1]               |
+| type      |     -     | `actions`          | Type: [`actions`, `chrome-extension`] |
+| issues    |   `all`   | `true`             | Append an Issues Link                 |
+| tags      | `actions` | -                  | Actions Tags for Uses                 |
 
 **type:** The type is parsed from the repository topics if not provided.
 
@@ -172,13 +172,16 @@ jobs:
 
 The following rolling [tags](https://github.com/smashedr/update-release-notes-action/tags) are maintained.
 
-| Version&nbsp;Tag                                                                                                                                                                                                                             | Rolling | Bugs | Feat. | Target   | Example  |
-| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----: | :--: | :---: | :------- | :------- |
-| [![GitHub Tag Major](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*&style=for-the-badge&label=%20&color=44cc10)](https://github.com/smashedr/update-release-notes-action/releases/latest) |   ✅    |  ✅  |  ✅   | `vN.x.x` | `vN`     |
-| [![GitHub Tag Minor](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*.*&style=for-the-badge&label=%20&color=blue)](https://github.com/smashedr/update-release-notes-action/releases/latest) |   ✅    |  ✅  |  ❌   | `vN.N.x` | `vN.N`   |
-| [![GitHub Release](https://img.shields.io/github/v/release/smashedr/update-release-notes-action?style=for-the-badge&label=%20&color=red)](https://github.com/smashedr/update-release-notes-action/releases/latest)                           |   ❌    |  ❌  |  ❌   | `vN.N.N` | `vN.N.N` |
+| Version&nbsp;Tag                                                                                                                                                                                                                             | Rolling | Bugs | Feat. |   Name    |  Target  | Example  |
+| :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :-----: | :--: | :---: | :-------: | :------: | :------- |
+| [![GitHub Tag Major](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*&style=for-the-badge&label=%20&color=44cc10)](https://github.com/smashedr/update-release-notes-action/releases/latest) |   ✅    |  ✅  |  ✅   | **Major** | `vN.x.x` | `vN`     |
+| [![GitHub Tag Minor](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*.*&style=for-the-badge&label=%20&color=blue)](https://github.com/smashedr/update-release-notes-action/releases/latest) |   ✅    |  ✅  |  ❌   | **Minor** | `vN.N.x` | `vN.N`   |
+| [![GitHub Release](https://img.shields.io/github/v/release/smashedr/update-release-notes-action?style=for-the-badge&label=%20&color=red)](https://github.com/smashedr/update-release-notes-action/releases/latest)                           |   ❌    |  ❌  |  ❌   | **Micro** | `vN.N.N` | `vN.N.N` |
 
-You can view the release notes for each version on the [releases](https://github.com/smashedr/update-release-notes-action/releases) page.
+You can view the release notes for each version on the [releases](https://github.com/cssnr/cloudflare-purge-cache-action/releases) page.
+
+The **Major** tag is recommended. It is the most up-to-date and always backwards compatible.
+Breaking changes would result in a **Major** version bump. At a minimum you should use a **Minor** tag.
 
 # Support
 
