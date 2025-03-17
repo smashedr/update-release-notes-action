@@ -229,9 +229,9 @@ function getConfig() {
             type = 'actions'
         } else if (topics.includes('chrome-extension')) {
             type = 'chrome-extension'
-        }
-        if (!type) {
-            throw new Error(`Unable to parse type from topics.`)
+        } else {
+            type = 'generic'
+            core.warning('Unknown Type. Using generic type.')
         }
     }
     return {

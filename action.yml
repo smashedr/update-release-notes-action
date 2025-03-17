@@ -28,7 +28,6 @@ inputs:
   type:
     description: "Update Type"
     required: false
-    default: "actions"
   issues:
     description: "Issues Link"
     required: false

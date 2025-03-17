@@ -1,6 +1,7 @@
 [![GitHub Tag Major](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*&logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/smashedr/update-release-notes-action/tags)
 [![GitHub Tag Minor](https://img.shields.io/github/v/tag/smashedr/update-release-notes-action?sort=semver&filter=!v*.*.*&logo=git&logoColor=white&labelColor=585858&label=%20)](https://github.com/smashedr/update-release-notes-action/tags)
 [![GitHub Release Version](https://img.shields.io/github/v/release/smashedr/update-release-notes-action?logo=git&logoColor=white&label=latest)](https://github.com/smashedr/update-release-notes-action/releases/latest)
+[![GitHub Dist Size](https://img.shields.io/github/size/smashedr/update-release-notes-action/dist%2Findex.js?label=dist%20size)](https://github.com/smashedr/update-release-notes-action/blob/master/src/index.js)
 [![Workflow Release](https://img.shields.io/github/actions/workflow/status/smashedr/update-release-notes-action/release.yaml?logo=github&label=release)](https://github.com/smashedr/update-release-notes-action/actions/workflows/release.yaml)
 [![Workflow Test](https://img.shields.io/github/actions/workflow/status/smashedr/update-release-notes-action/test.yaml?logo=github&label=test)](https://github.com/smashedr/update-release-notes-action/actions/workflows/test.yaml)
 [![Workflow lint](https://img.shields.io/github/actions/workflow/status/smashedr/update-release-notes-action/lint.yaml?logo=github&label=lint)](https://github.com/smashedr/update-release-notes-action/actions/workflows/lint.yaml)
@@ -27,16 +28,16 @@ Update Release Notes Action. One Day...
 
 ## Inputs
 
-| Input     |   Type    | Default&nbsp;Value | Input&nbsp;Description                |
-| :-------- | :-------: | :----------------- | :------------------------------------ |
-| location  |     -     | `head`             | Place at [`head`, `tail`]             |
-| delimiter |     -     | -                  | String where to insert notes          |
-| remove    |     -     | `false`            | Remove delimiter after insert         |
-| summary   |     -     | `true`             | Add Summary to Job                    |
-| token     |     -     | `github.token`     | For use with a PAT [^1]               |
-| type      |     -     | `actions`          | Type: [`actions`, `chrome-extension`] |
-| issues    |   `all`   | `true`             | Append an Issues Link                 |
-| tags      | `actions` | -                  | Actions Tags for Uses                 |
+| Input     |   Type    | Default&nbsp;Value | Input&nbsp;Description                   |
+| :-------- | :-------: | :----------------- | :--------------------------------------- |
+| location  |     -     | `head`             | Place at [`head`, `tail`]                |
+| delimiter |     -     | -                  | String where to insert notes             |
+| remove    |     -     | `false`            | Remove delimiter after insert            |
+| summary   |     -     | `true`             | Add Summary to Job                       |
+| token     |     -     | `github.token`     | For use with a PAT [^1]                  |
+| type      |     -     | `generic`          | Type: [`actions`, `chrome-extension`] \* |
+| issues    |   `all`   | `true`             | Append an Issues Link                    |
+| tags      | `actions` | -                  | Actions Tags for Uses                    |
 
 **type:** The type is parsed from the repository topics if not provided.
 
