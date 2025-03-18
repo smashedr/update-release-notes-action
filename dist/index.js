@@ -38302,7 +38302,7 @@ function wrappy (fn, cb) {
 /***/ ((module) => {
 
 const action = `\
-🚀 Use this release with tags:
+🚀 Use this release with these tags:
 
 \`\`\`text
 {{#each tags}}
@@ -40282,21 +40282,18 @@ const Handlebars = __nccwpck_require__(8508)
     try {
         core.info(`🏳️ Starting Update Release Notes Action`)
 
-        // Extra Debug
-        core.startGroup('Debug: github.context')
-        console.log(github.context)
-        core.endGroup() // Debug github.context
-        core.startGroup('Debug: process.env')
-        console.log(process.env)
-        core.endGroup() // Debug process.env
+        // // Extra Debug
+        // core.startGroup('Debug: github.context')
+        // console.log(github.context)
+        // core.endGroup() // Debug github.context
+        // core.startGroup('Debug: process.env')
+        // console.log(process.env)
+        // core.endGroup() // Debug process.env
 
         // Debug
         core.startGroup('Debug')
-        console.log('GITHUB_REF_NAME:', process.env.GITHUB_REF_NAME)
         console.log('github.context.ref:', github.context.ref)
         console.log('github.context.eventName:', github.context.eventName)
-        // const topics = github.context.payload.repository.topics
-        // console.log('topics:', topics)
         core.endGroup() // Debug
 
         if (github.context.eventName !== 'release') {
@@ -40316,42 +40313,32 @@ const Handlebars = __nccwpck_require__(8508)
 
         const octokit = github.getOctokit(config.token)
 
-        // // Get Release
-        // const release = await octokit.rest.repos.getRelease({
-        //     owner,
-        //     repo,
-        //     release_id,
-        // })
-        // // console.log('release:', release)
-        // console.log('release.data.body:\n', JSON.stringify(release.data.body))
-
         // Get Releases
-        const [current, previous] = await getReleases(config, octokit)
-
-        core.startGroup('Previous Releases (not used)')
-        console.log(previous)
-        core.endGroup() // Previous Releases
-
-        core.startGroup('Current Releases')
-        console.log(current)
-        core.endGroup() // Current Releases
-
-        if (!current) {
+        // const [current, previous] = await getReleases(config, octokit)
+        // console.log('current:', current)
+        // console.log('previous:', previous)
+        const release = await octokit.rest.repos.getRelease({
+            ...github.context.repo,
+            release_id: github.context.payload.release.id,
+        })
+        // console.log('release:', release)
+        if (!release?.data) {
             return core.setFailed('Current Release Not Found!')
         }
-
-        core.startGroup('Current Release Body')
-        core.info(current.body)
-        core.endGroup() // Current Release Body
+        // core.startGroup('Current Release Body')
+        // core.info(release.data.body)
+        // core.endGroup() // Current Release Body
 
         // Generate Additional Notes
-        core.startGroup(`Generate Notes for: ${config.type}`)
-        let notes
+        core.startGroup(`Generate Notes for: \u001b[33;1m${config.type}`)
+        // Stage 1
+        let notes = ''
         if (config.type === 'actions') {
             notes = genActionsNotes(config)
         } else if (config.type === 'chrome-extension') {
             core.warning('Not Yet Implemented: chrome-extension')
         }
+        // Stage 2
         if (config.issues) {
             core.info('Appending Issue Link to Notes')
             notes += addIssueNotes()
@@ -40364,16 +40351,20 @@ const Handlebars = __nccwpck_require__(8508)
 
         // Update Release Body
         core.startGroup('New Release Body')
-        const body = updateBody(config, current.body, notes)
+        const body = updateBody(config, release.data.body, notes)
         core.info(body)
         core.endGroup()
 
         // Update Release
-        await octokit.rest.repos.updateRelease({
-            ...config.repo,
-            release_id: config.release_id,
-            body,
-        })
+        if (config.update) {
+            await octokit.rest.repos.updateRelease({
+                ...github.context.repo,
+                release_id: github.context.payload.release.id,
+                body,
+            })
+        } else {
+            core.info('⏩ \u001b[33;1mSkipping Release Notes Update')
+        }
 
         // Outputs
         core.info('📩 Setting Outputs')
@@ -40400,13 +40391,18 @@ const Handlebars = __nccwpck_require__(8508)
  * @return {string}
  */
 function genActionsNotes(config) {
-    if (!config.tags.includes(config.tag_name)) {
-        console.log('Adding tag:', config.tag_name)
-        config.tags.push(config.tag_name)
+    if (!config.tags?.length) {
+        console.log('Skipping Actions Notes: No tags')
+        return ''
+    }
+    console.log('Generating Actions Notes')
+    if (!config.tags.includes(github.context.payload.release.tag_name)) {
+        console.log('Adding tag:', github.context.payload.release.tag_name)
+        config.tags.push(github.context.payload.release.tag_name)
     }
 
     const data = {
-        action: `${config.repo.owner}/${config.repo.repo}`,
+        action: `${github.context.repo.owner}/${github.context.repo.repo}`,
         tags: config.tags,
     }
     console.log('data:', data)
@@ -40418,7 +40414,7 @@ function genActionsNotes(config) {
     // let images = []
     // for (const tag of config.tags) {
     //     console.log('tag:', tag)
-    //     images.push(`${config.repo.owner}/${config.repo.repo}@${tag}`)
+    //     images.push(`${github.context.repo.owner}/${github.context.repo.repo}@${tag}`)
     // }
     // console.log('images:', images)
     //
@@ -40455,75 +40451,39 @@ function updateBody(config, body, notes) {
     } else {
         result = body + '\n\n' + notes
     }
-    // console.log('updated release body:\n', result)
     return result
 }
 
-/**
- * Get Current and Previous Release
- * @param config
- * @param octokit
- * @return {Promise<[Object|undefined, Object|undefined]>}
- */
-async function getReleases(config, octokit) {
-    const releases = await octokit.rest.repos.listReleases({
-        ...config.repo,
-    })
-    core.startGroup('Last 30 Releases (debugging)')
-    console.log(releases.data)
-    core.endGroup() // Releases
-
-    let previous
-    let current
-    let found = 0
-    for (const release of releases.data) {
-        // console.debug('release:', release)
-        if (found) {
-            previous = release
-            break
-        }
-        if (release.id === config.release_id) {
-            current = release
-            found = 1
-        }
-    }
-    return [current, previous]
-}
-
-/**
- * Get Config
- * @return {{ tags: string[], location: string, delimiter: string, issues: boolean, remove: boolean, summary: boolean, token: string, release_id: number, tag_name: string, repo: {owner: string, repo: string}, topics: string[], type: string }}
- */
-function getConfig() {
-    const topics = github.context.payload.repository.topics
-    let type = core.getInput('type')
-    if (!type) {
-        if (topics.includes('actions')) {
-            type = 'actions'
-        } else if (topics.includes('chrome-extension')) {
-            type = 'chrome-extension'
-        } else {
-            type = 'generic'
-            core.warning('Unknown Type. Using generic type.')
-        }
-    }
-    return {
-        tags: core.getInput('tags', { required: true }).split(','),
-        location: core.getInput('location', { required: true }),
-        delimiter: core.getInput('delimiter'),
-        issues: core.getBooleanInput('issues'),
-        remove: core.getBooleanInput('remove'),
-        summary: core.getBooleanInput('summary'),
-        token: core.getInput('token', { required: true }),
-
-        release_id: github.context.payload.release.id,
-        tag_name: github.context.payload.release.tag_name,
-        repo: { ...github.context.repo },
-        // repo: { owner: 'smashedr', repo: 'test-workflows' },
-        topics,
-        type,
-    }
-}
+// /**
+//  * Get Current and Previous Release
+//  * @param config
+//  * @param octokit
+//  * @return {Promise<[Object|undefined, Object|undefined]>}
+//  */
+// async function getReleases(config, octokit) {
+//     const releases = await octokit.rest.repos.listReleases({
+//         ...github.context.repo,
+//     })
+//     // core.startGroup('Last 30 Releases (debugging)')
+//     // console.log(releases.data)
+//     // core.endGroup() // Releases
+//
+//     let previous
+//     let current
+//     let found = 0
+//     for (const release of releases.data) {
+//         // console.debug('release:', release)
+//         if (found) {
+//             previous = release
+//             break
+//         }
+//         if (release.id === github.context.payload.release.id) {
+//             current = release
+//             found = 1
+//         }
+//     }
+//     return [current, previous]
+// }
 
 /**
  * Add Summary
@@ -40548,6 +40508,38 @@ async function addSummary(config, body) {
     const link = 'https://github.com/smashedr/update-release-notes-action'
     core.summary.addRaw(`\n[${text}](${link}?tab=readme-ov-file#readme)\n\n---`)
     await core.summary.write()
+}
+
+/**
+ * Get Config
+ * @return {{ tags: string[], location: string, delimiter: string, issues: boolean, remove: boolean, update: boolean, summary: boolean, token: string, topics: string[], type: string }}
+ */
+function getConfig() {
+    const topics = github.context.payload.repository.topics
+    let type = core.getInput('type')
+    if (!type) {
+        if (topics?.includes('actions')) {
+            type = 'actions'
+        } else if (topics?.includes('chrome-extension')) {
+            type = 'chrome-extension'
+        } else {
+            type = 'generic'
+            core.warning('Unknown Type. Using generic type.')
+        }
+    }
+    const tags = core.getInput('tags')
+    return {
+        tags: tags ? tags.split(',') : '',
+        location: core.getInput('location', { required: true }),
+        delimiter: core.getInput('delimiter'),
+        issues: core.getBooleanInput('issues'),
+        remove: core.getBooleanInput('remove'),
+        update: core.getBooleanInput('update'),
+        summary: core.getBooleanInput('summary'),
+        token: core.getInput('token', { required: true }),
+        topics,
+        type,
+    }
 }
 
 })();

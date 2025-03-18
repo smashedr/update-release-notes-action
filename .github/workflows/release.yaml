@@ -13,11 +13,17 @@ jobs:
       contents: write
 
     steps:
+      - name: "Debug event.json"
+        continue-on-error: true
+        run: |
+          cat "${GITHUB_EVENT_PATH}"
+
       - name: "Update Tags"
         id: tags
         uses: cssnr/update-version-tags-action@v1
 
       - name: "Debug Tags"
+        continue-on-error: true
         run: |
           echo "github.ref_name: ${{ github.ref_name }}"
           echo "steps.tags.outputs.tags: ${{ steps.tags.outputs.tags }}"
@@ -28,3 +34,11 @@ jobs:
         with:
           tags: ${{ steps.tags.outputs.tags }}
           location: tail
+
+      - name: "Package Changelog Action"
+        uses: smashedr/package-changelog-action@master
+        continue-on-error: true
+
+      - name: "Combine Release Notes Action"
+        uses: smashedr/combine-release-notes-action@master
+        continue-on-error: true

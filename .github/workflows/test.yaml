@@ -26,26 +26,36 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v4
 
-      - name: "Debug event.json"
-        run: |
-          cat "${GITHUB_EVENT_PATH}"
+      #- name: "Debug event.json"
+      #  run: |
+      #    cat "${GITHUB_EVENT_PATH}"
 
       - name: "Test Local Action"
         id: test
         uses: ./
         with:
-          tags: "v1,v1.0"
+          #tags: "v1,v1.0"
           #delimiter: "--"
-          remove: true
+          #remove: true
           location: tail
+          update: false
+          #type: actions
 
-      #- name: "Verify Outputs"
-      #  run: |
-      #    echo "body: '${{ steps.test.outputs.body }}'"
-      #    if [ -z '${{ steps.test.outputs.body }}' ];then
-      #      echo "No Output: body"
-      #      exit 1
-      #    fi
+      - name: "Verify Outputs"
+        env:
+          BODY: ${{ steps.test.outputs.body }}
+          NOTES: ${{ steps.test.outputs.notes }}
+        run: |
+          echo "body: '${{ env.BODY }}'"
+          if [ -z '${{ env.BODY }}' ];then
+            echo "No Output: body"
+            exit 1
+          fi
+          echo "notes: '${{ env.NOTES }}'"
+          if [ -z '${{ env.NOTES }}' ];then
+            echo "No Output: notes"
+            exit 1
+          fi
 
       #- name: "Schedule Failure Notification"
       #  if: ${{ failure() && github.event_name == 'schedule' }}

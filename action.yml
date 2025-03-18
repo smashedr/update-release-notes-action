@@ -17,6 +17,10 @@ inputs:
     description: "Remove delimiter after insert"
     required: false
     default: "false"
+  update:
+    description: "Update Release Notes"
+    required: false
+    default: "true"
   summary:
     description: "Add Summary to Job"
     required: false

@@ -33,6 +33,7 @@ Update Release Notes Action. One Day...
 | location  |     -     | `head`             | Place at [`head`, `tail`]                |
 | delimiter |     -     | -                  | String where to insert notes             |
 | remove    |     -     | `false`            | Remove delimiter after insert            |
+| update    |     -     | `true`             | Update Release Notes                     |
 | summary   |     -     | `true`             | Add Summary to Job                       |
 | token     |     -     | `github.token`     | For use with a PAT [^1]                  |
 | type      |     -     | `generic`          | Type: [`actions`, `chrome-extension`] \* |
@@ -45,7 +46,7 @@ Update Release Notes Action. One Day...
 
 ---
 
-🚀 Use this release with tags:
+🚀 Use this release with these tags:
 
 ```text
 smashedr/test-workflows@v1
@@ -71,7 +72,7 @@ smashedr/test-workflows@v1.0.2
 
 **Full Changelog**: https://github.com/smashedr/test-workflows/compare/v1.0.1...v1.0.2
 
-🚀 Use the latest version with one of these tags:
+🚀 Use this release with these tags:
 
 ```text
 smashedr/test-workflows@v1
@@ -79,7 +80,7 @@ smashedr/test-workflows@v1.0
 smashedr/test-workflows@v1.0.2
 ```
 
-❤️ Please [report any issues](https://github.com/smashedr/test-workflows/issues) you encounter...
+❤️ Please [report any issues](https://github.com/smashedr/test-workflows/issues) you find.
 
 ---
 
@@ -108,7 +109,7 @@ With no inputs this will append a link to report issues.
 
 ### Permissions
 
-This action requires the following permissions:
+This action requires the following permissions to update release notes:
 
 ```yaml
 permissions:
@@ -124,13 +125,19 @@ permissions:
 
 ```yaml
 - name: 'Update Release Notes Action'
-  id: test
+  id: notes
   uses: smashedr/update-release-notes-action@master
 
 - name: 'Echo Output'
+  env:
+    BODY: ${{ steps.notes.outputs.body }}
+    NOTES: ${{ steps.notes.outputs.notes }}
   run: |
-    echo "body: '${{ steps.test.outputs.body }}'"
+    echo "body: '${{ env.BODY }}'"
+    echo "notes: '${{ env.NOTES }}'"
 ```
+
+Note: due to the way `${{}}` expressions are evaluated, multi-line output gets executed in a run block.
 
 ## Examples
 
@@ -157,6 +164,7 @@ jobs:
         uses: cssnr/update-version-tags-action@v1
 
       - name: 'Debug Tags'
+        continue-on-error: true
         run: |
           echo "github.ref_name: ${{ github.ref_name }}"
           echo "steps.tags.outputs.tags: ${{ steps.tags.outputs.tags }}"

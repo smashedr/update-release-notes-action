@@ -1,5 +1,5 @@
 const action = `\
-🚀 Use this release with tags:
+🚀 Use this release with these tags:
 
 \`\`\`text
 {{#each tags}}
