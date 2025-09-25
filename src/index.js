@@ -2,7 +2,7 @@ const core = require('@actions/core')
 const github = require('@actions/github')
 const Handlebars = require('handlebars')
 
-import { action } from './templates'
+const { action } = require('./templates.js')
 
 // main
 ;(async () => {
@@ -19,8 +19,9 @@ import { action } from './templates'
 
         // Debug
         core.startGroup('Debug')
-        console.log('github.context.ref:', github.context.ref)
+        console.log('github.context.payload.repo:', github.context.repo)
         console.log('github.context.eventName:', github.context.eventName)
+        console.log('github.context.ref:', github.context.ref)
         core.endGroup() // Debug
 
         if (github.context.eventName !== 'release') {
@@ -30,18 +31,18 @@ import { action } from './templates'
             return core.warning(`Skipping prerelease.`)
         }
 
-        // Get Config
-        const config = getConfig()
-        core.startGroup('Parsed Config')
-        console.log(config)
-        core.endGroup() // Config
+        // Get Inputs
+        const inputs = getInputs()
+        core.startGroup('Parsed Inputs')
+        console.log(inputs)
+        core.endGroup() // Inputs
 
-        core.info(`⌛ Processing type: \u001b[33;1m${config.type}`)
+        core.info(`⌛ Processing type: \u001b[33;1m${inputs.type}`)
 
-        const octokit = github.getOctokit(config.token)
+        const octokit = github.getOctokit(inputs.token)
 
         // Get Releases
-        // const [current, previous] = await getReleases(config, octokit)
+        // const [current, previous] = await getReleases(inputs, octokit)
         // console.log('current:', current)
         // console.log('previous:', previous)
         const release = await octokit.rest.repos.getRelease({
@@ -57,16 +58,16 @@ import { action } from './templates'
         // core.endGroup() // Current Release Body
 
         // Generate Additional Notes
-        core.startGroup(`Generate Notes for: \u001b[33;1m${config.type}`)
+        core.startGroup(`Generate Notes for: \u001b[33;1m${inputs.type}`)
         // Stage 1
         let notes = ''
-        if (config.type === 'actions') {
-            notes = genActionsNotes(config)
-        } else if (config.type === 'chrome-extension') {
+        if (inputs.type === 'actions') {
+            notes = genActionsNotes(inputs)
+        } else if (inputs.type === 'chrome-extension') {
             core.warning('Not Yet Implemented: chrome-extension')
         }
         // Stage 2
-        if (config.issues) {
+        if (inputs.issues) {
             core.info('Appending Issue Link to Notes')
             notes += addIssueNotes()
         }
@@ -78,12 +79,12 @@ import { action } from './templates'
 
         // Update Release Body
         core.startGroup('New Release Body')
-        const body = updateBody(config, release.data.body, notes)
+        const body = updateBody(inputs, release.data.body, notes)
         core.info(body)
         core.endGroup()
 
         // Update Release
-        if (config.update) {
+        if (inputs.update) {
             await octokit.rest.repos.updateRelease({
                 ...github.context.repo,
                 release_id: github.context.payload.release.id,
@@ -99,9 +100,9 @@ import { action } from './templates'
         core.setOutput('notes', notes)
 
         // Summary
-        if (config.summary) {
+        if (inputs.summary) {
             core.info('📝 Writing Job Summary')
-            await addSummary(config, body)
+            await addSummary(inputs, body)
         }
 
         core.info(`✅ \u001b[32;1mFinished Success`)
@@ -114,23 +115,23 @@ import { action } from './templates'
 
 /**
  * Generate Actions Notes
- * @param {Object} config
+ * @param {Object} inputs
  * @return {string}
  */
-function genActionsNotes(config) {
-    if (!config.tags?.length) {
+function genActionsNotes(inputs) {
+    if (!inputs.tags?.length) {
         console.log('Skipping Actions Notes: No tags')
         return ''
     }
     console.log('Generating Actions Notes')
-    if (!config.tags.includes(github.context.payload.release.tag_name)) {
+    if (!inputs.tags.includes(github.context.payload.release.tag_name)) {
         console.log('Adding tag:', github.context.payload.release.tag_name)
-        config.tags.push(github.context.payload.release.tag_name)
+        inputs.tags.push(github.context.payload.release.tag_name)
     }
 
     const data = {
         action: `${github.context.repo.owner}/${github.context.repo.repo}`,
-        tags: config.tags,
+        tags: inputs.tags,
     }
     console.log('data:', data)
     const template = Handlebars.compile(action)
@@ -139,7 +140,7 @@ function genActionsNotes(config) {
     return result
 
     // let images = []
-    // for (const tag of config.tags) {
+    // for (const tag of inputs.tags) {
     //     console.log('tag:', tag)
     //     images.push(`${github.context.repo.owner}/${github.context.repo.repo}@${tag}`)
     // }
@@ -155,25 +156,23 @@ function addIssueNotes() {
     return `\n❤️ Please [report any issues](${url}) you find.`
 }
 
-function updateBody(config, body, notes) {
+function updateBody(inputs, body, notes) {
     let result
-    if (config.delimiter) {
-        if (!body.includes(config.delimiter)) {
-            throw new Error(
-                `Delimiter not found in release body: ${config.delimiter}`
-            )
+    if (inputs.delimiter) {
+        if (!body.includes(inputs.delimiter)) {
+            throw new Error(`Delimiter not found in release body: ${inputs.delimiter}`)
         }
-        const [head, tail] = body.split(config.delimiter)
+        const [head, tail] = body.split(inputs.delimiter)
         console.log('head:', JSON.stringify(head))
         console.log('tail:', JSON.stringify(tail))
-        if (config.remove) {
+        if (inputs.remove) {
             result = head + '\n\n' + notes + '\n\n' + tail
-        } else if (config.location === 'head') {
-            result = head + '\n\n' + notes + '\n\n' + config.delimiter + tail
+        } else if (inputs.location === 'head') {
+            result = head + '\n\n' + notes + '\n\n' + inputs.delimiter + tail
         } else {
-            result = head + config.delimiter + '\n\n' + notes + '\n\n' + tail
+            result = head + inputs.delimiter + '\n\n' + notes + '\n\n' + tail
         }
-    } else if (config.location === 'head') {
+    } else if (inputs.location === 'head') {
         result = notes + '\n\n' + body
     } else {
         result = body + '\n\n' + notes
@@ -183,11 +182,11 @@ function updateBody(config, body, notes) {
 
 // /**
 //  * Get Current and Previous Release
-//  * @param config
+//  * @param inputs
 //  * @param octokit
 //  * @return {Promise<[Object|undefined, Object|undefined]>}
 //  */
-// async function getReleases(config, octokit) {
+// async function getReleases(inputs, octokit) {
 //     const releases = await octokit.rest.repos.listReleases({
 //         ...github.context.repo,
 //     })
@@ -214,20 +213,20 @@ function updateBody(config, body, notes) {
 
 /**
  * Add Summary
- * @param {Object} config
+ * @param {Object} inputs
  * @param {String} body
  * @return {Promise<void>}
  */
-async function addSummary(config, body) {
+async function addSummary(inputs, body) {
     core.summary.addRaw('## Update Release Notes Action\n\n')
     core.summary.addRaw('🚀 We Did It Red It!\n\n')
     core.summary.addDetails('Release Notes', `\n\n---\n\n${body}\n\n---\n\n`)
 
-    delete config.token
-    const yaml = Object.entries(config)
+    delete inputs.token
+    const yaml = Object.entries(inputs)
         .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
         .join('\n')
-    core.summary.addRaw('<details><summary>Config</summary>')
+    core.summary.addRaw('<details><summary>Inputs</summary>')
     core.summary.addCodeBlock(yaml, 'yaml')
     core.summary.addRaw('</details>\n')
 
@@ -238,10 +237,10 @@ async function addSummary(config, body) {
 }
 
 /**
- * Get Config
+ * Get Inputs
  * @return {{ tags: string[], location: string, delimiter: string, issues: boolean, remove: boolean, update: boolean, summary: boolean, token: string, topics: string[], type: string }}
  */
-function getConfig() {
+function getInputs() {
     const topics = github.context.payload.repository.topics
     let type = core.getInput('type')
     if (!type) {

@@ -27,8 +27,8 @@
   "repository": {
     "name": "update-release-notes-action",
     "description": "Update Release Notes Action",
-    "full_name": "cssnr/update-release-notes-action",
-    "html_url": "https://github.com/cssnr/update-release-notes-action",
+    "full_name": "smashedr/update-release-notes-action",
+    "html_url": "https://github.com/smashedr/update-release-notes-action",
     "license": {
       "name": "GNU General Public License v3.0",
       "spdx_id": "GPL-3.0"
