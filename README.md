@@ -243,18 +243,18 @@ Generic Actions:
 - [cssnr/env-json-action](https://github.com/cssnr/env-json-action) - Convert env file to json or vice versa.
 - [cssnr/get-commit-action](https://github.com/cssnr/get-commit-action) - Get the current commit with full details.
 
-Special Use Case Actions:
+Specific Actions:
 
 - [cssnr/push-artifacts-action](https://github.com/cssnr/push-artifacts-action) - Sync's artifacts to a remote host.
 - [smashedr/update-release-notes-action](https://github.com/smashedr/update-release-notes-action) - Update release notes.
 
-</details>
+---
 
-&nbsp;
+</details>
 
 <details><summary>Action Templates 📝</summary>
 
-These are basic action's templates that I use for creating new actions.
+These are basic actions' templates that I use for creating new actions.
 
 - [js-test-action](https://github.com/smashedr/js-test-action?tab=readme-ov-file#readme) - JavaScript
 - [py-test-action](https://github.com/smashedr/py-test-action?tab=readme-ov-file#readme) - Python
@@ -262,6 +262,8 @@ These are basic action's templates that I use for creating new actions.
 - [docker-test-action](https://github.com/smashedr/docker-test-action?tab=readme-ov-file#readme) - Docker Image
 
 Note: The `docker-action` template runs from, builds for, and pushes images to [GitHub Container Registry](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry).
+
+---
 
 </details>
 
