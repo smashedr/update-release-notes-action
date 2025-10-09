@@ -8,37 +8,28 @@ branding:
 inputs:
   location:
     description: "Location to place notes"
-    required: false
     default: "tail"
   delimiter:
     description: "String where to insert notes"
-    required: false
   remove:
     description: "Remove delimiter after insert"
-    required: false
     default: "false"
   update:
     description: "Update Release Notes"
-    required: false
     default: "true"
   summary:
     description: "Add Summary to Job"
-    required: false
     default: "true"
   token:
     description: "GitHub Token"
-    required: false
     default: ${{ github.token }}
   type:
     description: "Update Type"
-    required: false
   issues:
     description: "Issues Link"
-    required: false
     default: "true"
   tags:
     description: "Actions Tags"
-    required: false
 
 outputs:
   body:
@@ -47,5 +38,5 @@ outputs:
     description: "Generated Release Notes"
 
 runs:
-  using: "node20"
+  using: "node24"
   main: "dist/index.js"
