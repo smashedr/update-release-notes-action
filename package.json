@@ -1,7 +1,6 @@
 {
   "name": "update-release-notes-action",
   "private": true,
-  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "npx rollup --config rollup.config.js",
