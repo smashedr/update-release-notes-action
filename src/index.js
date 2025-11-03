@@ -128,10 +128,8 @@ function genActionsNotes(inputs) {
         console.log('Adding tag:', github.context.payload.release.tag_name)
         inputs.tags.push(github.context.payload.release.tag_name)
     }
-    if (!inputs.tags.includes(github.context.sha)) {
-        console.log('Adding tag:', github.context.sha)
-        inputs.tags.push(github.context.sha)
-    }
+    console.log('Adding tag:', github.context.sha)
+    inputs.tags.push(`${github.context.sha} # ${github.context.payload.release.tag_name}`)
 
     const data = {
         action: `${github.context.repo.owner}/${github.context.repo.repo}`,
