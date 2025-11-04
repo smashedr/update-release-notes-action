@@ -1,8 +1,16 @@
+const path = require('node:path')
+
 const core = require('@actions/core')
 const github = require('@actions/github')
-const Handlebars = require('handlebars')
 
-const { action } = require('./templates.js')
+const nunjucks = require('nunjucks')
+
+// Setup
+console.log('__dirname:', __dirname)
+const viewsPath = path.resolve(__dirname, '../src/views')
+console.log('viewsPath:', viewsPath)
+
+nunjucks.configure(viewsPath, { autoescape: true })
 
 // main
 ;(async () => {
@@ -66,6 +74,7 @@ const { action } = require('./templates.js')
         } else if (inputs.type === 'chrome-extension') {
             core.warning('Not Yet Implemented: chrome-extension')
         }
+
         // Stage 2
         if (inputs.issues) {
             core.info('Appending Issue Link to Notes')
@@ -136,8 +145,7 @@ function genActionsNotes(inputs) {
         tags: inputs.tags,
     }
     console.log('data:', data)
-    const template = Handlebars.compile(action)
-    const result = template(data)
+    const result = nunjucks.render('action.jinja', data)
     console.log('result:', result)
     return result
 

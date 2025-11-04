@@ -37,12 +37,12 @@ jobs:
         id: test
         uses: ./
         with:
-          #tags: "v1,v1.0"
+          tags: "v1,v1.0"
           #delimiter: "--"
           #remove: true
           location: tail
           update: false
-          #type: actions
+          type: actions
 
       - name: "Verify Outputs"
         env:
