@@ -12,115 +12,109 @@ console.log('viewsPath:', viewsPath)
 
 nunjucks.configure(viewsPath, { autoescape: true })
 
-// main
-;(async () => {
-    try {
-        core.info(`🏳️ Starting Update Release Notes Action`)
+async function main() {
+    core.info(`🏳️ Starting Update Release Notes Action`)
 
-        // // Extra Debug
-        // core.startGroup('Debug: github.context')
-        // console.log(github.context)
-        // core.endGroup() // Debug github.context
-        // core.startGroup('Debug: process.env')
-        // console.log(process.env)
-        // core.endGroup() // Debug process.env
+    // // Debug
+    // core.startGroup('Debug: github.context')
+    // console.log(github.context)
+    // core.endGroup() // Debug github.context
+    // core.startGroup('Debug: process.env')
+    // console.log(process.env)
+    // core.endGroup() // Debug process.env
 
-        // Debug
-        core.startGroup('Debug')
-        console.log('github.context.payload.repo:', github.context.repo)
-        console.log('github.context.eventName:', github.context.eventName)
-        console.log('github.context.ref:', github.context.ref)
-        core.endGroup() // Debug
+    // Debug
+    core.startGroup('Debug')
+    console.log('github.context.repo:', github.context.repo)
+    console.log('github.context.eventName:', github.context.eventName)
+    console.log('github.context.ref:', github.context.ref)
+    core.endGroup() // Debug
 
-        if (github.context.eventName !== 'release') {
-            return core.warning(`Skipping event: ${github.context.eventName}`)
-        }
-        if (github.context.payload.release.prerelease) {
-            return core.warning(`Skipping prerelease.`)
-        }
+    if (github.context.eventName !== 'release') {
+        return core.warning(`Skipping event: ${github.context.eventName}`)
+    }
+    if (github.context.payload.release.prerelease) {
+        return core.warning(`Skipping prerelease.`)
+    }
 
-        // Get Inputs
-        const inputs = getInputs()
-        core.startGroup('Parsed Inputs')
-        console.log(inputs)
-        core.endGroup() // Inputs
+    // Get Inputs
+    const inputs = getInputs()
+    core.startGroup('Parsed Inputs')
+    console.log(inputs)
+    core.endGroup() // Inputs
 
-        core.info(`⌛ Processing type: \u001b[33;1m${inputs.type}`)
+    core.info(`⌛ Processing type: \u001b[33;1m${inputs.type}`)
 
-        const octokit = github.getOctokit(inputs.token)
+    /** @type {import("@octokit/rest").Octokit} */
+    const octokit = github.getOctokit(inputs.token)
 
-        // Get Releases
-        // const [current, previous] = await getReleases(inputs, octokit)
-        // console.log('current:', current)
-        // console.log('previous:', previous)
-        const release = await octokit.rest.repos.getRelease({
+    // Get Releases
+    // const [current, previous] = await getReleases(inputs, octokit)
+    // console.log('current:', current)
+    // console.log('previous:', previous)
+    const release = await octokit.rest.repos.getRelease({
+        ...github.context.repo,
+        release_id: github.context.payload.release.id,
+    })
+    // console.log('release:', release)
+    if (!release?.data) {
+        return core.setFailed('Current Release Not Found!')
+    }
+    // core.startGroup('Current Release Body')
+    // core.info(release.data.body)
+    // core.endGroup() // Current Release Body
+
+    // Generate Additional Notes
+    core.startGroup(`Generate Notes for: \u001b[33;1m${inputs.type}`)
+    // Stage 1
+    let notes = ''
+    if (inputs.type === 'actions') {
+        notes = genActionsNotes(inputs)
+    } else if (inputs.type === 'chrome-extension') {
+        core.warning('Not Yet Implemented: chrome-extension')
+    }
+
+    // Stage 2
+    if (inputs.issues) {
+        core.info('Appending Issue Link to Notes')
+        notes += addIssueNotes()
+    }
+    core.endGroup() // Generate Notes
+
+    core.startGroup('Generated Release Notes')
+    core.info(notes)
+    core.endGroup() // New Release Notes
+
+    // Update Release Body
+    core.startGroup('New Release Body')
+    const body = updateBody(inputs, release.data.body, notes)
+    core.info(body)
+    core.endGroup()
+
+    // Update Release
+    if (inputs.update) {
+        await octokit.rest.repos.updateRelease({
             ...github.context.repo,
             release_id: github.context.payload.release.id,
+            body,
         })
-        // console.log('release:', release)
-        if (!release?.data) {
-            return core.setFailed('Current Release Not Found!')
-        }
-        // core.startGroup('Current Release Body')
-        // core.info(release.data.body)
-        // core.endGroup() // Current Release Body
-
-        // Generate Additional Notes
-        core.startGroup(`Generate Notes for: \u001b[33;1m${inputs.type}`)
-        // Stage 1
-        let notes = ''
-        if (inputs.type === 'actions') {
-            notes = genActionsNotes(inputs)
-        } else if (inputs.type === 'chrome-extension') {
-            core.warning('Not Yet Implemented: chrome-extension')
-        }
-
-        // Stage 2
-        if (inputs.issues) {
-            core.info('Appending Issue Link to Notes')
-            notes += addIssueNotes()
-        }
-        core.endGroup() // Generate Notes
-
-        core.startGroup('Generated Release Notes')
-        core.info(notes)
-        core.endGroup() // New Release Notes
-
-        // Update Release Body
-        core.startGroup('New Release Body')
-        const body = updateBody(inputs, release.data.body, notes)
-        core.info(body)
-        core.endGroup()
-
-        // Update Release
-        if (inputs.update) {
-            await octokit.rest.repos.updateRelease({
-                ...github.context.repo,
-                release_id: github.context.payload.release.id,
-                body,
-            })
-        } else {
-            core.info('⏩ \u001b[33;1mSkipping Release Notes Update')
-        }
-
-        // Outputs
-        core.info('📩 Setting Outputs')
-        core.setOutput('body', body)
-        core.setOutput('notes', notes)
-
-        // Summary
-        if (inputs.summary) {
-            core.info('📝 Writing Job Summary')
-            await addSummary(inputs, body)
-        }
-
-        core.info(`✅ \u001b[32;1mFinished Success`)
-    } catch (e) {
-        core.debug(e)
-        core.info(e.message)
-        core.setFailed(e.message)
+    } else {
+        core.info('⏩ \u001b[33;1mSkipping Release Notes Update')
     }
-})()
+
+    // Outputs
+    core.info('📩 Setting Outputs')
+    core.setOutput('body', body)
+    core.setOutput('notes', notes)
+
+    // Summary
+    if (inputs.summary) {
+        core.info('📝 Writing Job Summary')
+        await addSummary(inputs, body)
+    }
+
+    core.info(`✅ \u001b[32;1mFinished Success`)
+}
 
 /**
  * Generate Actions Notes
@@ -277,3 +271,9 @@ function getInputs() {
         type,
     }
 }
+
+main().catch((e) => {
+    core.debug(e)
+    core.info(e.message)
+    core.setFailed(e.message)
+})
