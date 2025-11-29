@@ -1,5 +1,7 @@
 name: "Test"
 
+# actions-up-ignore-file
+
 on:
   workflow_dispatch:
   #schedule:
@@ -24,7 +26,12 @@ jobs:
 
     steps:
       - name: "Checkout"
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
+
+      - name: "Debug event.json"
+        if: ${{ !github.event.act }}
+        continue-on-error: true
+        run: cat "${GITHUB_EVENT_PATH}"
 
       - name: "Debug CTX github"
         if: ${{ !github.event.act }}
@@ -33,35 +40,55 @@ jobs:
           GITHUB_CTX: ${{ toJSON(github) }}
         run: echo "$GITHUB_CTX"
 
+      - name: "Debug Environment"
+        if: ${{ !github.event.act }}
+        continue-on-error: true
+        run: env
+
       - name: "Test Local Action"
         id: test
         uses: ./
         with:
-          tags: "v1,v1.0"
+          #tags: "v1,v1.0"
           #delimiter: "--"
           #remove: true
           location: tail
           update: false
-          type: actions
+          #type: actions
+          #actions: |
+          #  tags: "v1,v1.0"
+          pypi: |
+            name: zipline-cli
+            prerelease: ${{ github.event.release.prerelease }}
 
-      - name: "Verify Outputs"
-        env:
-          BODY: ${{ steps.test.outputs.body }}
-          NOTES: ${{ steps.test.outputs.notes }}
-        run: |
-          echo "body: '${{ env.BODY }}'"
-          if [ -z '${{ env.BODY }}' ];then
-            echo "No Output: body"
-            exit 1
-          fi
-          echo "notes: '${{ env.NOTES }}'"
-          if [ -z '${{ env.NOTES }}' ];then
-            echo "No Output: notes"
-            exit 1
-          fi
+      - name: "Validate Outputs"
+        if: ${{ !github.event.act }}
+        uses: cssnr/validate-outputs-action@master
+        with:
+          outputs: ${{ toJSON(steps.test.outputs) }}
+          data: |
+            body:
+            notes:
+
+      #- name: "Verify Outputs"
+      #  env:
+      #    BODY: ${{ steps.test.outputs.body }}
+      #    NOTES: ${{ steps.test.outputs.notes }}
+      #  run: |
+      #    echo "body: '${{ env.BODY }}'"
+      #    if [ -z '${{ env.BODY }}' ];then
+      #      echo "No Output: body"
+      #      exit 1
+      #    fi
+      #    echo "notes: '${{ env.NOTES }}'"
+      #    if [ -z '${{ env.NOTES }}' ];then
+      #      echo "No Output: notes"
+      #      exit 1
+      #    fi
 
       #- name: "Schedule Failure Notification"
       #  if: ${{ failure() && github.event_name == 'schedule' }}
-      #  uses: sarisia/actions-status-discord@v1
+      #  uses: sarisia/actions-status-discord@b8381b25576cb341b2af39926ab42c5056cc44ed # v1.15.5
       #  with:
       #    webhook: ${{ secrets.DISCORD_WEBHOOK }}
+      #    description: ${{ github.event.repository.html_url }}/actions/runs/${{ github.run_id }}

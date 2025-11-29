@@ -1,15 +1,13 @@
 const path = require('node:path')
-
 const core = require('@actions/core')
 const github = require('@actions/github')
-
 const nunjucks = require('nunjucks')
+const yaml = require('js-yaml')
 
 // Setup
 console.log('__dirname:', __dirname)
 const viewsPath = path.resolve(__dirname, '../src/views')
 console.log('viewsPath:', viewsPath)
-
 nunjucks.configure(viewsPath, { autoescape: true })
 
 async function main() {
@@ -28,13 +26,14 @@ async function main() {
     console.log('github.context.repo:', github.context.repo)
     console.log('github.context.eventName:', github.context.eventName)
     console.log('github.context.ref:', github.context.ref)
+    console.log('github.context.payload.release.id:', github.context.payload.release?.id)
     core.endGroup() // Debug
 
     if (github.context.eventName !== 'release') {
         return core.warning(`Skipping event: ${github.context.eventName}`)
     }
-    if (github.context.payload.release.prerelease) {
-        return core.warning(`Skipping prerelease.`)
+    if (!github.context.payload.release?.id) {
+        return core.setFailed('Missing: github.context.payload.release.id')
     }
 
     // Get Inputs
@@ -56,7 +55,7 @@ async function main() {
         ...github.context.repo,
         release_id: github.context.payload.release.id,
     })
-    // console.log('release:', release)
+    console.log('release.status:', release.status)
     if (!release?.data) {
         return core.setFailed('Current Release Not Found!')
     }
@@ -66,15 +65,15 @@ async function main() {
 
     // Generate Additional Notes
     core.startGroup(`Generate Notes for: \u001b[33;1m${inputs.type}`)
-    // Stage 1
     let notes = ''
     if (inputs.type === 'actions') {
         notes = genActionsNotes(inputs)
+    } else if (inputs.type === 'pypi') {
+        notes = genPyPiNotes(inputs)
     } else if (inputs.type === 'chrome-extension') {
         core.warning('Not Yet Implemented: chrome-extension')
     }
-
-    // Stage 2
+    // Generate Issue Notes
     if (inputs.issues) {
         core.info('Appending Issue Link to Notes')
         notes += addIssueNotes()
@@ -83,21 +82,22 @@ async function main() {
 
     core.startGroup('Generated Release Notes')
     core.info(notes)
-    core.endGroup() // New Release Notes
+    core.endGroup() // Generated Release Notes
 
     // Update Release Body
-    core.startGroup('New Release Body')
+    core.startGroup('Update Release Body')
     const body = updateBody(inputs, release.data.body, notes)
     core.info(body)
-    core.endGroup()
+    core.endGroup() // Update Release Body
 
     // Update Release
     if (inputs.update) {
-        await octokit.rest.repos.updateRelease({
+        const res = await octokit.rest.repos.updateRelease({
             ...github.context.repo,
             release_id: github.context.payload.release.id,
             body,
         })
+        console.log('res.status:', res.status)
     } else {
         core.info('⏩ \u001b[33;1mSkipping Release Notes Update')
     }
@@ -110,10 +110,28 @@ async function main() {
     // Summary
     if (inputs.summary) {
         core.info('📝 Writing Job Summary')
-        await addSummary(inputs, body)
+        try {
+            await addSummary(inputs, body)
+        } catch (e) {
+            console.log(e)
+            core.error(`Error writing Job Summary: ${e.message}`)
+        }
     }
 
     core.info(`✅ \u001b[32;1mFinished Success`)
+}
+
+/**
+ * Generate PyPi Notes
+ * @param {Object} inputs
+ * @return {string}
+ */
+function genPyPiNotes(inputs) {
+    // const data = parseData(inputs.pypi)
+    console.log('data:', inputs.pypi)
+    const result = nunjucks.render('pypi.jinja', inputs.pypi)
+    console.log('result:', result)
+    return result
 }
 
 /**
@@ -122,21 +140,22 @@ async function main() {
  * @return {string}
  */
 function genActionsNotes(inputs) {
-    if (!inputs.tags?.length) {
+    if (!inputs.actions.tags?.length && !inputs.tags.length) {
         console.log('Skipping Actions Notes: No tags')
         return ''
     }
     console.log('Generating Actions Notes')
-    if (!inputs.tags.includes(github.context.payload.release.tag_name)) {
+    const tags = splitTrim(inputs.actions.tags || inputs.tags)
+    if (!tags.includes(github.context.payload.release.tag_name)) {
         console.log('Adding tag:', github.context.payload.release.tag_name)
-        inputs.tags.push(github.context.payload.release.tag_name)
+        tags.push(github.context.payload.release.tag_name)
     }
     console.log('Adding tag:', github.context.sha)
-    inputs.tags.push(`${github.context.sha} # ${github.context.payload.release.tag_name}`)
+    tags.push(`${github.context.sha} # ${github.context.payload.release.tag_name}`)
 
     const data = {
         action: `${github.context.repo.owner}/${github.context.repo.repo}`,
-        tags: inputs.tags,
+        tags,
     }
     console.log('data:', data)
     const result = nunjucks.render('action.jinja', data)
@@ -241,15 +260,70 @@ async function addSummary(inputs, body) {
 }
 
 /**
+ * Parse JSON/YAML Data from a String
+ * @param {string} data
+ * @return {object}
+ */
+function parseData(data) {
+    core.debug(`parseData: ${typeof data}: ${data}`)
+    // console.log(`parseData: ${typeof data}: ${data}`)
+    if (!data) return {}
+    try {
+        return JSON.parse(data)
+    } catch (e) {
+        core.debug(`JSON.parse failed: ${e.message}`)
+        // console.log(`JSON.parse failed: ${e.message}`)
+    }
+    try {
+        return yaml.load(data)
+    } catch (e) {
+        core.debug(`yaml.load failed: ${e.message}`)
+        // console.log(`yaml.load failed: ${e.message}`)
+    }
+    throw new Error(`Unable to parse data: ${data}`)
+}
+
+function splitTrim(value) {
+    return value
+        .split(/[\r\n,]+/)
+        .map((s) => s.trim())
+        .filter((s) => s !== '')
+}
+
+/**
  * Get Inputs
- * @return {{ tags: string[], location: string, delimiter: string, issues: boolean, remove: boolean, update: boolean, summary: boolean, token: string, topics: string[], type: string }}
+ * @typedef {object} Inputs
+ * @property {string} type
+ * @property {string[]} topics
+ * @property {object} actions
+ * @property {object} pypi
+ * @property {boolean} issues
+ * @property {string} location
+ * @property {string} delimiter
+ * @property {boolean} remove
+ * @property {boolean} update
+ * @property {boolean} summary
+ * @property {string} token
+ * @return Inputs
  */
 function getInputs() {
-    const topics = github.context.payload.repository.topics
+    const actions = core.getInput('actions')
+    const pypi = core.getInput('pypi')
+
+    const topics = github.context.payload.repository.topics || []
     let type = core.getInput('type')
+    if (!type) {
+        if (actions) {
+            type = 'actions'
+        } else if (pypi) {
+            type = 'pypi'
+        }
+    }
     if (!type) {
         if (topics?.includes('actions')) {
             type = 'actions'
+        } else if (topics?.includes('pypi')) {
+            type = 'pypi'
         } else if (topics?.includes('chrome-extension')) {
             type = 'chrome-extension'
         } else {
@@ -257,18 +331,19 @@ function getInputs() {
             core.warning('Unknown Type. Using generic type.')
         }
     }
-    const tags = core.getInput('tags')
     return {
-        tags: tags ? tags.split(',') : '',
+        type,
+        topics,
+        actions: parseData(actions),
+        pypi: parseData(pypi),
+        issues: core.getBooleanInput('issues'),
         location: core.getInput('location', { required: true }),
         delimiter: core.getInput('delimiter'),
-        issues: core.getBooleanInput('issues'),
         remove: core.getBooleanInput('remove'),
         update: core.getBooleanInput('update'),
         summary: core.getBooleanInput('summary'),
         token: core.getInput('token', { required: true }),
-        topics,
-        type,
+        tags: core.getInput('tags'),
     }
 }
 
