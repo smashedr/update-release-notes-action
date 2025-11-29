@@ -1,6 +1,7 @@
 name: "Update Release Notes"
 description: "Update Release Notes Action"
 author: "Shane"
+
 branding:
   icon: "activity"
   color: "yellow"
@@ -25,11 +26,17 @@ inputs:
     default: ${{ github.token }}
   type:
     description: "Update Type"
+    deprecationMessage: "Changed to: <type>.<data>"
   issues:
     description: "Issues Link"
     default: "true"
   tags:
     description: "Actions Tags"
+    deprecationMessage: "Changed to: actions.tags"
+  actions:
+    description: "Actions Data"
+  pypi:
+    description: "PyPi Data"
 
 outputs:
   body:

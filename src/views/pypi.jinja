@@ -1,0 +1,11 @@
+🚀 Use this release with this command:
+
+```shell
+{% if prerelease -%}
+  python -m pip install --pre -U --extra-index-url https://test.pypi.org/simple/ {name}
+{%- else -%}
+  python -m pip install -U {name}
+{%- endif %}
+```
+
+View on PyPi: https://{% if prerelease -%}test.{% endif %}pypi.org/project/zipline-cli/
