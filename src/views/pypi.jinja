@@ -2,9 +2,9 @@
 
 ```shell
 {% if prerelease -%}
-  python -m pip install --pre -U --extra-index-url https://test.pypi.org/simple/ {name}
+  python -m pip install --pre -U --extra-index-url https://test.pypi.org/simple/ {{ name }}
 {%- else -%}
-  python -m pip install -U {name}
+  python -m pip install -U {{ name }}
 {%- endif %}
 ```
 
