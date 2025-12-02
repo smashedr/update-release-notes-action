@@ -129,6 +129,7 @@ async function main() {
 function genPyPiNotes(inputs) {
     // const data = parseData(inputs.pypi)
     console.log('data:', inputs.pypi)
+    inputs.pypi.ref = process.env.GITHUB_REF_NAME
     const result = nunjucks.render('pypi.jinja', inputs.pypi)
     console.log('result:', result)
     return result

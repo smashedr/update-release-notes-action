@@ -8,4 +8,4 @@
 {%- endif %}
 ```
 
-View on PyPi: https://{% if prerelease -%}test.{% endif %}pypi.org/project/{{ name }}/
+View on PyPi: https://{% if prerelease %}test.{% endif %}pypi.org/project/{{ name }}/{% if prerelease %}{{ ref }}/{% endif %}

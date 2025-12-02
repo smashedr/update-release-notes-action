@@ -14,7 +14,8 @@ nunjucks.configure(viewsPath, { autoescape: true })
 
 const data = {
     name: 'zipline-cli',
-    prerelease: false,
+    prerelease: true,
+    ref: '0.0.1b1',
 }
 
 // const res = nunjucks.render('action.jinja', data)
