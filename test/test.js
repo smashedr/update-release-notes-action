@@ -13,6 +13,8 @@ nunjucks.configure(viewsPath, { autoescape: true })
 // }
 
 const data = {
+    pypi_url: 'https://test.pypi.org',
+    // extra_index_url: 'https://test.pypi.org/simple/',
     name: 'zipline-cli',
     prerelease: true,
     ref: '0.0.1b1',
@@ -21,4 +23,5 @@ const data = {
 // const res = nunjucks.render('action.jinja', data)
 const res = nunjucks.render('pypi.jinja', data)
 
+console.log('data:', data)
 console.log(`res: <START>\n${res}<END>`)

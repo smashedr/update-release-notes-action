@@ -1,11 +1,8 @@
 🚀 Use this release with this command:
 
 ```shell
-{% if prerelease -%}
-  python -m pip install -U --pre --extra-index-url https://test.pypi.org/simple/ {{ name }}
-{%- else -%}
-  python -m pip install -U {{ name }}
-{%- endif %}
+python -m pip install -U{% if prerelease %} --pre{% endif -%}
+{%- if extra_index_url %} --extra-index-url {{ extra_index_url }}{% endif %} {{ name }}
 ```
 
-View on PyPi: https://{% if prerelease %}test.{% endif %}pypi.org/project/{{ name }}/{% if prerelease %}{{ ref }}/{% endif %}
+View on PyPi: {{ pypi_url }}/project/{{ name }}/{% if prerelease %}{{ ref }}{% endif %}
