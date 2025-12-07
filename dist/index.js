@@ -41859,8 +41859,14 @@ function requireSrc () {
 	 */
 	function genPyPiNotes(inputs) {
 	    // const data = parseData(inputs.pypi)
-	    console.log('data:', inputs.pypi);
+	    console.log('data initial:', inputs.pypi);
 	    inputs.pypi.ref = process.env.GITHUB_REF_NAME;
+	    if (inputs.pypi.pypi_url) {
+	        inputs.pypi.pypi_url = inputs.pypi.pypi_url.replace(/\/$/, '');
+	    } else {
+	        inputs.pypi.pypi_url = 'https://pypi.org';
+	    }
+	    console.log('data final:', inputs.pypi);
 	    const result = nunjucks.render('pypi.jinja', inputs.pypi);
 	    console.log('result:', result);
 	    return result

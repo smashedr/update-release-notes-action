@@ -13,7 +13,7 @@ nunjucks.configure(viewsPath, { autoescape: true })
 // }
 
 const data = {
-    pypi_url: 'https://test.pypi.org',
+    // pypi_url: 'https://test.pypi.org',
     // extra_index_url: 'https://test.pypi.org/simple/',
     name: 'zipline-cli',
     prerelease: true,
