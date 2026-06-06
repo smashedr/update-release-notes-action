@@ -41888,8 +41888,14 @@ function requireSrc () {
 	        console.log('Adding tag:', github.context.payload.release.tag_name);
 	        tags.push(github.context.payload.release.tag_name);
 	    }
-	    console.log('Adding tag:', github.context.sha);
-	    tags.push(`${github.context.sha} # ${github.context.payload.release.tag_name}`);
+
+	    if (inputs.actions.sha) {
+	        console.log('Adding tag:', inputs.actions.sha);
+	        tags.push(`${inputs.actions.sha} # ${github.context.payload.release.tag_name}`);
+	    } else {
+	        console.log('Adding tag:', github.context.sha);
+	        tags.push(`${github.context.sha} # ${github.context.payload.release.tag_name}`);
+	    }
 
 	    const data = {
 	        action: `${github.context.repo.owner}/${github.context.repo.repo}`,
