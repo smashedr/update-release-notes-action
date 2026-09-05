@@ -1,6 +1,8 @@
-const path = require('node:path')
-const nunjucks = require('nunjucks')
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import nunjucks from 'nunjucks'
 
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 console.log('__dirname:', __dirname)
 const viewsPath = path.resolve(__dirname, '../src/views')
 console.log('viewsPath:', viewsPath)
