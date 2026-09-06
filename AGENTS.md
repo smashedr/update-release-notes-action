@@ -1,6 +1,6 @@
 # Agent Guide
 
-A GitHub Action to update GitHub Release Notes.
+A GitHub Action to update GitHub Release Notes on the release trigger.
 
 - [src](src) - is the source directory
 - [src/index.js](src/index.js) - single source file
@@ -12,6 +12,6 @@ ALWAYS use the `npm run *` command
 
 | Command            | Purpose                                 |
 | ------------------ | --------------------------------------- |
-| `npm run build`    | Rollup `src/index.ts` → `dist/index.js` |
+| `npm run build`    | Rollup `src/index.js` → `dist/index.js` |
 | `npm run lint`     | ESLint on `src/`                        |
 | `npm run prettier` | ALWAYS RUN AFTER EDITING FILES          |
