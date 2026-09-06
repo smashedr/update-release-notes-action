@@ -1,6 +1,7 @@
 {
   "name": "update-release-notes-action",
   "private": true,
+  "type": "module",
   "main": "dist/index.js",
   "scripts": {
     "build": "npx rollup --config rollup.config.mjs",
@@ -11,18 +12,18 @@
     "prettier:write": "npx prettier --write ."
   },
   "dependencies": {
-    "@actions/core": "^1.11.1",
-    "@actions/exec": "^1.1.1",
-    "@actions/github": "^6.0.1",
-    "js-yaml": "^4.1.1",
+    "@actions/core": "^3.0.1",
+    "@actions/exec": "^3.0.0",
+    "@actions/github": "^9.1.1",
+    "js-yaml": "^5.4.1",
     "nunjucks": "^3.2.4"
   },
   "devDependencies": {
-    "@eslint/js": "^9.39.1",
-    "@rollup/plugin-commonjs": "^29.0.0",
+    "@eslint/js": "^10.0.1",
+    "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
-    "eslint": "^9.39.1",
-    "prettier": "^3.7.2",
-    "rollup": "^4.53.3"
+    "eslint": "^10.10.0",
+    "prettier": "^3.9.6",
+    "rollup": "^4.63.1"
   }
 }

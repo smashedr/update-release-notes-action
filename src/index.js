@@ -1,8 +1,11 @@
-const path = require('node:path')
-const core = require('@actions/core')
-const github = require('@actions/github')
-const nunjucks = require('nunjucks')
-const yaml = require('js-yaml')
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+import * as core from '@actions/core'
+import * as github from '@actions/github'
+import * as yaml from 'js-yaml'
+import nunjucks from 'nunjucks'
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // Setup
 console.log('__dirname:', __dirname)
