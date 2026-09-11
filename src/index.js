@@ -11,7 +11,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 console.log('__dirname:', __dirname)
 const viewsPath = path.resolve(__dirname, '../src/views')
 console.log('viewsPath:', viewsPath)
-nunjucks.configure(viewsPath, { autoescape: true })
+const env = nunjucks.configure(viewsPath, { autoescape: true })
+env.addFilter('pad', (str, width) => String(str ?? '').padEnd(width))
 
 async function main() {
     core.info(`🏳️ Starting Update Release Notes Action`)
@@ -73,6 +74,8 @@ async function main() {
         notes = genActionsNotes(inputs)
     } else if (inputs.type === 'pypi') {
         notes = genPyPiNotes(inputs)
+    } else if (inputs.type === 'android') {
+        notes = genAndroidNotes(inputs)
     } else if (inputs.type === 'chrome-extension') {
         core.warning('Not Yet Implemented: chrome-extension')
     }
@@ -188,6 +191,18 @@ function genActionsNotes(inputs) {
     // let notes = '🚀 Use this release one of these tags:\n\n'
     // notes += '```text\n' + `${images.join('\n')}` + '\n```'
     // return notes
+}
+
+/**
+ * Generate Android Notes
+ * @param {Object} inputs
+ * @return {string}
+ */
+function genAndroidNotes(inputs) {
+    console.log('data initial:', inputs.android)
+    const result = nunjucks.render('android.jinja', inputs.android)
+    console.log('result:', result)
+    return result
 }
 
 function addIssueNotes() {
@@ -313,6 +328,7 @@ function splitTrim(value) {
  * @property {string[]} topics
  * @property {object} actions
  * @property {object} pypi
+ * @property {object} android
  * @property {boolean} issues
  * @property {string} location
  * @property {string} delimiter
@@ -325,6 +341,7 @@ function splitTrim(value) {
 function getInputs() {
     const actions = core.getInput('actions')
     const pypi = core.getInput('pypi')
+    const android = core.getInput('android')
 
     const topics = github.context.payload.repository.topics || []
     let type = core.getInput('type')
@@ -333,6 +350,8 @@ function getInputs() {
             type = 'actions'
         } else if (pypi) {
             type = 'pypi'
+        } else if (android) {
+            type = 'android'
         }
     }
     if (!type) {
@@ -340,6 +359,8 @@ function getInputs() {
             type = 'actions'
         } else if (topics?.includes('pypi')) {
             type = 'pypi'
+        } else if (topics?.includes('android-application')) {
+            type = 'android'
         } else if (topics?.includes('chrome-extension')) {
             type = 'chrome-extension'
         } else {
@@ -352,6 +373,7 @@ function getInputs() {
         topics,
         actions: parseData(actions),
         pypi: parseData(pypi),
+        android: parseData(android),
         issues: core.getBooleanInput('issues'),
         location: core.getInput('location', { required: true }),
         delimiter: core.getInput('delimiter'),

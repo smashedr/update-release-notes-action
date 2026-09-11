@@ -7,7 +7,8 @@ console.log('__dirname:', __dirname)
 const viewsPath = path.resolve(__dirname, '../src/views')
 console.log('viewsPath:', viewsPath)
 
-nunjucks.configure(viewsPath, { autoescape: true })
+const env = nunjucks.configure(viewsPath, { autoescape: true })
+env.addFilter('pad', (str, width) => String(str).padEnd(width))
 
 // const data = {
 //     action: `cssnr/best-action`,
@@ -22,8 +23,17 @@ const data = {
     ref: '0.0.1b1',
 }
 
+const android = {
+    version_name: '1.2.3',
+    version_code: '999',
+    package_id: 'org.cssnr.zipline',
+}
+
 // const res = nunjucks.render('action.jinja', data)
 const res = nunjucks.render('pypi.jinja', data)
+const ares = nunjucks.render('android.jinja', android)
 
 console.log('data:', data)
 console.log(`res: <START>\n${res}<END>`)
+console.log('android:', android)
+console.log(`ares: <START>\n${ares}<END>`)
