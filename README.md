@@ -30,12 +30,6 @@
 
 Update Release Notes Action. One Day...
 
-| Info          | Details           |
-| ------------- | ----------------- |
-| Version Name: | 1.2.3             |
-| Version Code: | 999               |
-| Package ID:   | org.cssnr.zipline |
-
 > [!WARNING]  
 > This README.md is not up-to-date.
 
@@ -78,11 +72,8 @@ smashedr/test-workflows@v1.0.2
 
 ---
 
-| Info          | Details           |
-| ------------- | ----------------- |
-| Version Name: | 1.2.3             |
-| Version Code: | 999               |
-| Package ID:   | org.cssnr.zipline |
+**Version**: | 1.2.3 (999)
+**ID**: `org.cssnr.zipline`
 
 ❤️ Please [report any issues](https://github.com/smashedr/test-workflows/issues) you find.
 

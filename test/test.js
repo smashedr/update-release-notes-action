@@ -7,8 +7,7 @@ console.log('__dirname:', __dirname)
 const viewsPath = path.resolve(__dirname, '../src/views')
 console.log('viewsPath:', viewsPath)
 
-const env = nunjucks.configure(viewsPath, { autoescape: true })
-env.addFilter('pad', (str, width) => String(str).padEnd(width))
+nunjucks.configure(viewsPath, { autoescape: true })
 
 // const data = {
 //     action: `cssnr/best-action`,
@@ -16,17 +15,17 @@ env.addFilter('pad', (str, width) => String(str).padEnd(width))
 // }
 
 const data = {
-    // pypi_url: 'https://test.pypi.org',
-    // extra_index_url: 'https://test.pypi.org/simple/',
-    name: 'zipline-cli',
-    prerelease: true,
-    ref: '0.0.1b1',
+  // pypi_url: 'https://test.pypi.org',
+  // extra_index_url: 'https://test.pypi.org/simple/',
+  name: 'zipline-cli',
+  prerelease: true,
+  ref: '0.0.1b1',
 }
 
 const android = {
-    version_name: '1.2.3',
-    version_code: '999',
-    package_id: 'org.cssnr.zipline',
+  version_name: '1.2.3',
+  version_code: '999',
+  package_id: 'org.cssnr.zipline',
 }
 
 // const res = nunjucks.render('action.jinja', data)

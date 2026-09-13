@@ -3,10 +3,10 @@ import { nodeResolve } from '@rollup/plugin-node-resolve'
 
 // noinspection JSUnusedGlobalSymbols
 export default {
-    input: 'src/index.js',
-    output: {
-        file: 'dist/index.js',
-        format: 'esm',
-    },
-    plugins: [commonjs(), nodeResolve({ preferBuiltins: true })],
+  input: 'src/index.js',
+  output: {
+    file: 'dist/index.js',
+    format: 'esm',
+  },
+  plugins: [commonjs(), nodeResolve({ preferBuiltins: true })],
 }
