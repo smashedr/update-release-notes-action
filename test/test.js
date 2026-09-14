@@ -15,15 +15,24 @@ nunjucks.configure(viewsPath, { autoescape: true })
 // }
 
 const data = {
-    // pypi_url: 'https://test.pypi.org',
-    // extra_index_url: 'https://test.pypi.org/simple/',
-    name: 'zipline-cli',
-    prerelease: true,
-    ref: '0.0.1b1',
+  // pypi_url: 'https://test.pypi.org',
+  // extra_index_url: 'https://test.pypi.org/simple/',
+  name: 'zipline-cli',
+  prerelease: true,
+  ref: '0.0.1b1',
+}
+
+const android = {
+  version_name: '1.2.3',
+  version_code: '999',
+  package_id: 'org.cssnr.zipline',
 }
 
 // const res = nunjucks.render('action.jinja', data)
 const res = nunjucks.render('pypi.jinja', data)
+const ares = nunjucks.render('android.jinja', android)
 
 console.log('data:', data)
 console.log(`res: <START>\n${res}<END>`)
+console.log('android:', android)
+console.log(`ares: <START>\n${ares}<END>`)

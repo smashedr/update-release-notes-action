@@ -37,6 +37,8 @@ inputs:
     description: "Actions Data"
   pypi:
     description: "PyPi Data"
+  android:
+    description: "Android Data"
 
 outputs:
   body:

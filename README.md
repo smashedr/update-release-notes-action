@@ -35,17 +35,18 @@ Update Release Notes Action. One Day...
 
 ## Inputs
 
-| Input     |   Type    | Default&nbsp;Value | Input&nbsp;Description                   |
-| :-------- | :-------: | :----------------- | :--------------------------------------- |
-| location  |     -     | `head`             | Place at [`head`, `tail`]                |
-| delimiter |     -     | -                  | String where to insert notes             |
-| remove    |     -     | `false`            | Remove delimiter after insert            |
-| update    |     -     | `true`             | Update Release Notes                     |
-| summary   |     -     | `true`             | Add Summary to Job                       |
-| token     |     -     | `github.token`     | For use with a PAT                       |
-| type      |     -     | `generic`          | Type: [`actions`, `chrome-extension`] \* |
-| issues    |   `all`   | `true`             | Append an Issues Link                    |
-| tags      | `actions` | -                  | Actions Tags for Uses                    |
+| Input     |   Type    | Default&nbsp;Value | Input&nbsp;Description                  |
+| :-------- | :-------: | :----------------- | :-------------------------------------- |
+| location  |     -     | `head`             | Place at [`head`, `tail`]               |
+| delimiter |     -     | -                  | String where to insert notes            |
+| remove    |     -     | `false`            | Remove delimiter after insert           |
+| update    |     -     | `true`             | Update Release Notes                    |
+| summary   |     -     | `true`             | Add Summary to Job                      |
+| token     |     -     | `github.token`     | For use with a PAT                      |
+| type      |     -     | `generic`          | Type: [`actions`, `android`, `pypi`] \* |
+| issues    |   `all`   | `true`             | Append an Issues Link                   |
+| tags      | `actions` | -                  | Actions Tags for Uses                   |
+| android   |  `data`   | -                  | Android Data for Type                   |
 
 **type:** The type is parsed from the repository topics if not provided.
 
@@ -60,6 +61,19 @@ smashedr/test-workflows@v1
 smashedr/test-workflows@v1.0
 smashedr/test-workflows@v1.0.2
 ```
+
+❤️ Please [report any issues](https://github.com/smashedr/test-workflows/issues) you find.
+
+---
+
+</details>
+
+<details><summary>👀 View Example Notes for Type: android</summary>
+
+---
+
+**Version**: | 1.2.3 (999)
+**ID**: `org.cssnr.zipline`
 
 ❤️ Please [report any issues](https://github.com/smashedr/test-workflows/issues) you find.
 
@@ -112,6 +126,18 @@ With no inputs this will append a link to report issues.
 ```yaml
 - name: 'Update Release Notes Action'
   uses: smashedr/update-release-notes-action@master
+```
+
+For Android releases, set the `android` data:
+
+```yaml
+- name: 'Update Release Notes Action'
+  uses: smashedr/update-release-notes-action@master
+  with:
+    android: |
+      version_name: 1.2.3
+      version_code: 999
+      package_id: org.cssnr.zipline
 ```
 
 ### Permissions

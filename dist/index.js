@@ -43236,114 +43236,116 @@ console.log('viewsPath:', viewsPath);
 nunjucks.configure(viewsPath, { autoescape: true });
 
 async function main() {
-    info(`🏳️ Starting Update Release Notes Action`);
+  info(`🏳️ Starting Update Release Notes Action`);
 
-    // // Debug
-    // core.startGroup('Debug: github.context')
-    // console.log(github.context)
-    // core.endGroup() // Debug github.context
-    // core.startGroup('Debug: process.env')
-    // console.log(process.env)
-    // core.endGroup() // Debug process.env
+  // // Debug
+  // core.startGroup('Debug: github.context')
+  // console.log(github.context)
+  // core.endGroup() // Debug github.context
+  // core.startGroup('Debug: process.env')
+  // console.log(process.env)
+  // core.endGroup() // Debug process.env
 
-    // Debug
-    startGroup('Debug');
-    console.log('github.context.repo:', context.repo);
-    console.log('github.context.eventName:', context.eventName);
-    console.log('github.context.ref:', context.ref);
-    console.log('github.context.payload.release.id:', context.payload.release?.id);
-    endGroup(); // Debug
+  // Debug
+  startGroup('Debug');
+  console.log('github.context.repo:', context.repo);
+  console.log('github.context.eventName:', context.eventName);
+  console.log('github.context.ref:', context.ref);
+  console.log('github.context.payload.release.id:', context.payload.release?.id);
+  endGroup(); // Debug
 
-    if (context.eventName !== 'release') {
-        return warning(`Skipping event: ${context.eventName}`)
-    }
-    if (!context.payload.release?.id) {
-        return setFailed('Missing: github.context.payload.release.id')
-    }
+  if (context.eventName !== 'release') {
+    return warning(`Skipping event: ${context.eventName}`)
+  }
+  if (!context.payload.release?.id) {
+    return setFailed('Missing: github.context.payload.release.id')
+  }
 
-    // Get Inputs
-    const inputs = getInputs();
-    startGroup('Parsed Inputs');
-    console.log(inputs);
-    endGroup(); // Inputs
+  // Get Inputs
+  const inputs = getInputs();
+  startGroup('Parsed Inputs');
+  console.log(inputs);
+  endGroup(); // Inputs
 
-    info(`⌛ Processing type: \u001b[33;1m${inputs.type}`);
+  info(`⌛ Processing type: \u001b[33;1m${inputs.type}`);
 
-    /** @type {import("@octokit/rest").Octokit} */
-    const octokit = getOctokit(inputs.token);
+  /** @type {import("@octokit/rest").Octokit} */
+  const octokit = getOctokit(inputs.token);
 
-    // Get Releases
-    // const [current, previous] = await getReleases(inputs, octokit)
-    // console.log('current:', current)
-    // console.log('previous:', previous)
-    const release = await octokit.rest.repos.getRelease({
-        ...context.repo,
-        release_id: context.payload.release.id,
+  // Get Releases
+  // const [current, previous] = await getReleases(inputs, octokit)
+  // console.log('current:', current)
+  // console.log('previous:', previous)
+  const release = await octokit.rest.repos.getRelease({
+    ...context.repo,
+    release_id: context.payload.release.id,
+  });
+  console.log('release.status:', release.status);
+  if (!release?.data) {
+    return setFailed('Current Release Not Found!')
+  }
+  // core.startGroup('Current Release Body')
+  // core.info(release.data.body)
+  // core.endGroup() // Current Release Body
+
+  // Generate Additional Notes
+  startGroup(`Generate Notes for: \u001b[33;1m${inputs.type}`);
+  let notes = '';
+  if (inputs.type === 'actions') {
+    notes = genActionsNotes(inputs);
+  } else if (inputs.type === 'pypi') {
+    notes = genPyPiNotes(inputs);
+  } else if (inputs.type === 'android') {
+    notes = genAndroidNotes(inputs);
+  } else if (inputs.type === 'chrome-extension') {
+    warning('Not Yet Implemented: chrome-extension');
+  }
+  // Generate Issue Notes
+  if (inputs.issues) {
+    info('Appending Issue Link to Notes');
+    notes += addIssueNotes();
+  }
+  endGroup(); // Generate Notes
+
+  startGroup('Generated Release Notes');
+  info(notes);
+  endGroup(); // Generated Release Notes
+
+  // Update Release Body
+  startGroup('Update Release Body');
+  const body = updateBody(inputs, release.data.body, notes);
+  info(body);
+  endGroup(); // Update Release Body
+
+  // Update Release
+  if (inputs.update) {
+    const res = await octokit.rest.repos.updateRelease({
+      ...context.repo,
+      release_id: context.payload.release.id,
+      body,
     });
-    console.log('release.status:', release.status);
-    if (!release?.data) {
-        return setFailed('Current Release Not Found!')
+    console.log('res.status:', res.status);
+  } else {
+    info('⏩ \u001b[33;1mSkipping Release Notes Update');
+  }
+
+  // Outputs
+  info('📩 Setting Outputs');
+  setOutput('body', body);
+  setOutput('notes', notes);
+
+  // Summary
+  if (inputs.summary) {
+    info('📝 Writing Job Summary');
+    try {
+      await addSummary(inputs, body);
+    } catch (e) {
+      console.log(e);
+      error(`Error writing Job Summary: ${e.message}`);
     }
-    // core.startGroup('Current Release Body')
-    // core.info(release.data.body)
-    // core.endGroup() // Current Release Body
+  }
 
-    // Generate Additional Notes
-    startGroup(`Generate Notes for: \u001b[33;1m${inputs.type}`);
-    let notes = '';
-    if (inputs.type === 'actions') {
-        notes = genActionsNotes(inputs);
-    } else if (inputs.type === 'pypi') {
-        notes = genPyPiNotes(inputs);
-    } else if (inputs.type === 'chrome-extension') {
-        warning('Not Yet Implemented: chrome-extension');
-    }
-    // Generate Issue Notes
-    if (inputs.issues) {
-        info('Appending Issue Link to Notes');
-        notes += addIssueNotes();
-    }
-    endGroup(); // Generate Notes
-
-    startGroup('Generated Release Notes');
-    info(notes);
-    endGroup(); // Generated Release Notes
-
-    // Update Release Body
-    startGroup('Update Release Body');
-    const body = updateBody(inputs, release.data.body, notes);
-    info(body);
-    endGroup(); // Update Release Body
-
-    // Update Release
-    if (inputs.update) {
-        const res = await octokit.rest.repos.updateRelease({
-            ...context.repo,
-            release_id: context.payload.release.id,
-            body,
-        });
-        console.log('res.status:', res.status);
-    } else {
-        info('⏩ \u001b[33;1mSkipping Release Notes Update');
-    }
-
-    // Outputs
-    info('📩 Setting Outputs');
-    setOutput('body', body);
-    setOutput('notes', notes);
-
-    // Summary
-    if (inputs.summary) {
-        info('📝 Writing Job Summary');
-        try {
-            await addSummary(inputs, body);
-        } catch (e) {
-            console.log(e);
-            error(`Error writing Job Summary: ${e.message}`);
-        }
-    }
-
-    info(`✅ \u001b[32;1mFinished Success`);
+  info(`✅ \u001b[32;1mFinished Success`);
 }
 
 /**
@@ -43352,18 +43354,18 @@ async function main() {
  * @return {string}
  */
 function genPyPiNotes(inputs) {
-    // const data = parseData(inputs.pypi)
-    console.log('data initial:', inputs.pypi);
-    inputs.pypi.ref = process.env.GITHUB_REF_NAME;
-    if (inputs.pypi.pypi_url) {
-        inputs.pypi.pypi_url = inputs.pypi.pypi_url.replace(/\/$/, '');
-    } else {
-        inputs.pypi.pypi_url = 'https://pypi.org';
-    }
-    console.log('data final:', inputs.pypi);
-    const result = nunjucks.render('pypi.jinja', inputs.pypi);
-    console.log('result:', result);
-    return result
+  // const data = parseData(inputs.pypi)
+  console.log('data initial:', inputs.pypi);
+  inputs.pypi.ref = process.env.GITHUB_REF_NAME;
+  if (inputs.pypi.pypi_url) {
+    inputs.pypi.pypi_url = inputs.pypi.pypi_url.replace(/\/$/, '');
+  } else {
+    inputs.pypi.pypi_url = 'https://pypi.org';
+  }
+  console.log('data final:', inputs.pypi);
+  const result = nunjucks.render('pypi.jinja', inputs.pypi);
+  console.log('result:', result);
+  return result
 }
 
 /**
@@ -43372,73 +43374,85 @@ function genPyPiNotes(inputs) {
  * @return {string}
  */
 function genActionsNotes(inputs) {
-    if (!inputs.actions.tags?.length && !inputs.tags.length) {
-        console.log('Skipping Actions Notes: No tags');
-        return ''
-    }
-    console.log('Generating Actions Notes');
-    const tags = splitTrim(inputs.actions.tags || inputs.tags);
-    if (!tags.includes(context.payload.release.tag_name)) {
-        console.log('Adding tag:', context.payload.release.tag_name);
-        tags.push(context.payload.release.tag_name);
-    }
+  if (!inputs.actions.tags?.length && !inputs.tags.length) {
+    console.log('Skipping Actions Notes: No tags');
+    return ''
+  }
+  console.log('Generating Actions Notes');
+  const tags = splitTrim(inputs.actions.tags || inputs.tags);
+  if (!tags.includes(context.payload.release.tag_name)) {
+    console.log('Adding tag:', context.payload.release.tag_name);
+    tags.push(context.payload.release.tag_name);
+  }
 
-    if (inputs.actions.sha) {
-        console.log('Adding tag:', inputs.actions.sha);
-        tags.push(`${inputs.actions.sha} # ${context.payload.release.tag_name}`);
-    } else {
-        console.log('Adding tag:', context.sha);
-        tags.push(`${context.sha} # ${context.payload.release.tag_name}`);
-    }
+  if (inputs.actions.sha) {
+    console.log('Adding tag:', inputs.actions.sha);
+    tags.push(`${inputs.actions.sha} # ${context.payload.release.tag_name}`);
+  } else {
+    console.log('Adding tag:', context.sha);
+    tags.push(`${context.sha} # ${context.payload.release.tag_name}`);
+  }
 
-    const data = {
-        action: `${context.repo.owner}/${context.repo.repo}`,
-        tags,
-    };
-    console.log('data:', data);
-    const result = nunjucks.render('action.jinja', data);
-    console.log('result:', result);
-    return result
+  const data = {
+    action: `${context.repo.owner}/${context.repo.repo}`,
+    tags,
+  };
+  console.log('data:', data);
+  const result = nunjucks.render('action.jinja', data);
+  console.log('result:', result);
+  return result
 
-    // let images = []
-    // for (const tag of inputs.tags) {
-    //     console.log('tag:', tag)
-    //     images.push(`${github.context.repo.owner}/${github.context.repo.repo}@${tag}`)
-    // }
-    // console.log('images:', images)
-    //
-    // let notes = '🚀 Use this release one of these tags:\n\n'
-    // notes += '```text\n' + `${images.join('\n')}` + '\n```'
-    // return notes
+  // let images = []
+  // for (const tag of inputs.tags) {
+  //     console.log('tag:', tag)
+  //     images.push(`${github.context.repo.owner}/${github.context.repo.repo}@${tag}`)
+  // }
+  // console.log('images:', images)
+  //
+  // let notes = '🚀 Use this release one of these tags:\n\n'
+  // notes += '```text\n' + `${images.join('\n')}` + '\n```'
+  // return notes
+}
+
+/**
+ * Generate Android Notes
+ * @param {Object} inputs
+ * @return {string}
+ */
+function genAndroidNotes(inputs) {
+  console.log('data initial:', inputs.android);
+  const result = nunjucks.render('android.jinja', inputs.android);
+  console.log('result:', result);
+  return result
 }
 
 function addIssueNotes() {
-    const url = `${context.payload.repository.html_url}/issues`;
-    return `\n❤️ Please [report any issues](${url}) you find.`
+  const url = `${context.payload.repository.html_url}/issues`;
+  return `\n❤️ Please [report any issues](${url}) you find.`
 }
 
 function updateBody(inputs, body, notes) {
-    let result;
-    if (inputs.delimiter) {
-        if (!body.includes(inputs.delimiter)) {
-            throw new Error(`Delimiter not found in release body: ${inputs.delimiter}`)
-        }
-        const [head, tail] = body.split(inputs.delimiter);
-        console.log('head:', JSON.stringify(head));
-        console.log('tail:', JSON.stringify(tail));
-        if (inputs.remove) {
-            result = head + '\n\n' + notes + '\n\n' + tail;
-        } else if (inputs.location === 'head') {
-            result = head + '\n\n' + notes + '\n\n' + inputs.delimiter + tail;
-        } else {
-            result = head + inputs.delimiter + '\n\n' + notes + '\n\n' + tail;
-        }
-    } else if (inputs.location === 'head') {
-        result = notes + '\n\n' + body;
-    } else {
-        result = body + '\n\n' + notes;
+  let result;
+  if (inputs.delimiter) {
+    if (!body.includes(inputs.delimiter)) {
+      throw new Error(`Delimiter not found in release body: ${inputs.delimiter}`)
     }
-    return result
+    const [head, tail] = body.split(inputs.delimiter);
+    console.log('head:', JSON.stringify(head));
+    console.log('tail:', JSON.stringify(tail));
+    if (inputs.remove) {
+      result = head + '\n\n' + notes + '\n\n' + tail;
+    } else if (inputs.location === 'head') {
+      result = head + '\n\n' + notes + '\n\n' + inputs.delimiter + tail;
+    } else {
+      result = head + inputs.delimiter + '\n\n' + notes + '\n\n' + tail;
+    }
+  } else if (inputs.location === 'head') {
+    result = notes + '\n\n' + body;
+  } else {
+    result = body + '\n\n' + notes;
+  }
+  return result
 }
 
 // /**
@@ -43479,22 +43493,22 @@ function updateBody(inputs, body, notes) {
  * @return {Promise<void>}
  */
 async function addSummary(inputs, body) {
-    summary.addRaw('## Update Release Notes Action\n\n');
-    summary.addRaw('🚀 We Did It Red It!\n\n');
-    summary.addDetails('Release Notes', `\n\n---\n\n${body}\n\n---\n\n`);
+  summary.addRaw('## Update Release Notes Action\n\n');
+  summary.addRaw('🚀 We Did It Red It!\n\n');
+  summary.addDetails('Release Notes', `\n\n---\n\n${body}\n\n---\n\n`);
 
-    delete inputs.token;
-    const yaml = Object.entries(inputs)
-        .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
-        .join('\n');
-    summary.addRaw('<details><summary>Inputs</summary>');
-    summary.addCodeBlock(yaml, 'yaml');
-    summary.addRaw('</details>\n');
+  delete inputs.token;
+  const yaml = Object.entries(inputs)
+    .map(([k, v]) => `${k}: ${JSON.stringify(v)}`)
+    .join('\n');
+  summary.addRaw('<details><summary>Inputs</summary>');
+  summary.addCodeBlock(yaml, 'yaml');
+  summary.addRaw('</details>\n');
 
-    const text = 'View Documentation, Report Issues or Request Features';
-    const link = 'https://github.com/smashedr/update-release-notes-action';
-    summary.addRaw(`\n[${text}](${link}?tab=readme-ov-file#readme)\n\n---`);
-    await summary.write();
+  const text = 'View Documentation, Report Issues or Request Features';
+  const link = 'https://github.com/smashedr/update-release-notes-action';
+  summary.addRaw(`\n[${text}](${link}?tab=readme-ov-file#readme)\n\n---`);
+  await summary.write();
 }
 
 /**
@@ -43503,29 +43517,29 @@ async function addSummary(inputs, body) {
  * @return {object}
  */
 function parseData(data) {
-    debug(`parseData: ${typeof data}: ${data}`);
-    // console.log(`parseData: ${typeof data}: ${data}`)
-    if (!data) return {}
-    try {
-        return JSON.parse(data)
-    } catch (e) {
-        debug(`JSON.parse failed: ${e.message}`);
-        // console.log(`JSON.parse failed: ${e.message}`)
-    }
-    try {
-        return load(data)
-    } catch (e) {
-        debug(`yaml.load failed: ${e.message}`);
-        // console.log(`yaml.load failed: ${e.message}`)
-    }
-    throw new Error(`Unable to parse data: ${data}`)
+  debug(`parseData: ${typeof data}: ${data}`);
+  // console.log(`parseData: ${typeof data}: ${data}`)
+  if (!data) return {}
+  try {
+    return JSON.parse(data)
+  } catch (e) {
+    debug(`JSON.parse failed: ${e.message}`);
+    // console.log(`JSON.parse failed: ${e.message}`)
+  }
+  try {
+    return load(data)
+  } catch (e) {
+    debug(`yaml.load failed: ${e.message}`);
+    // console.log(`yaml.load failed: ${e.message}`)
+  }
+  throw new Error(`Unable to parse data: ${data}`)
 }
 
 function splitTrim(value) {
-    return value
-        .split(/[\r\n,]+/)
-        .map((s) => s.trim())
-        .filter((s) => s !== '')
+  return value
+    .split(/[\r\n,]+/)
+    .map((s) => s.trim())
+    .filter((s) => s !== '')
 }
 
 /**
@@ -43535,6 +43549,7 @@ function splitTrim(value) {
  * @property {string[]} topics
  * @property {object} actions
  * @property {object} pypi
+ * @property {object} android
  * @property {boolean} issues
  * @property {string} location
  * @property {string} delimiter
@@ -43545,48 +43560,54 @@ function splitTrim(value) {
  * @return Inputs
  */
 function getInputs() {
-    const actions = getInput('actions');
-    const pypi = getInput('pypi');
+  const actions = getInput('actions');
+  const pypi = getInput('pypi');
+  const android = getInput('android');
 
-    const topics = context.payload.repository.topics || [];
-    let type = getInput('type');
-    if (!type) {
-        if (actions) {
-            type = 'actions';
-        } else if (pypi) {
-            type = 'pypi';
-        }
+  const topics = context.payload.repository.topics || [];
+  let type = getInput('type');
+  if (!type) {
+    if (actions) {
+      type = 'actions';
+    } else if (pypi) {
+      type = 'pypi';
+    } else if (android) {
+      type = 'android';
     }
-    if (!type) {
-        if (topics?.includes('actions')) {
-            type = 'actions';
-        } else if (topics?.includes('pypi')) {
-            type = 'pypi';
-        } else if (topics?.includes('chrome-extension')) {
-            type = 'chrome-extension';
-        } else {
-            type = 'generic';
-            warning('Unknown Type. Using generic type.');
-        }
+  }
+  if (!type) {
+    if (topics?.includes('actions')) {
+      type = 'actions';
+    } else if (topics?.includes('pypi')) {
+      type = 'pypi';
+    } else if (topics?.includes('android-application')) {
+      type = 'android';
+    } else if (topics?.includes('chrome-extension')) {
+      type = 'chrome-extension';
+    } else {
+      type = 'generic';
+      warning('Unknown Type. Using generic type.');
     }
-    return {
-        type,
-        topics,
-        actions: parseData(actions),
-        pypi: parseData(pypi),
-        issues: getBooleanInput('issues'),
-        location: getInput('location', { required: true }),
-        delimiter: getInput('delimiter'),
-        remove: getBooleanInput('remove'),
-        update: getBooleanInput('update'),
-        summary: getBooleanInput('summary'),
-        token: getInput('token', { required: true }),
-        tags: getInput('tags'),
-    }
+  }
+  return {
+    type,
+    topics,
+    actions: parseData(actions),
+    pypi: parseData(pypi),
+    android: parseData(android),
+    issues: getBooleanInput('issues'),
+    location: getInput('location', { required: true }),
+    delimiter: getInput('delimiter'),
+    remove: getBooleanInput('remove'),
+    update: getBooleanInput('update'),
+    summary: getBooleanInput('summary'),
+    token: getInput('token', { required: true }),
+    tags: getInput('tags'),
+  }
 }
 
 main().catch((e) => {
-    debug(e);
-    info(e.message);
-    setFailed(e.message);
+  debug(e);
+  info(e.message);
+  setFailed(e.message);
 });
