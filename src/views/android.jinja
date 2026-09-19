@@ -1,2 +1,1 @@
-{% if version_name %}**Version**: {{ version_name }}{% if version_code %} ({{ version_code }}){% endif %}{% if package_id %}
-{% endif %}{% endif %}{% if package_id %}**ID**:  `{{ package_id }}`{% endif %}
+Version: {% if version_name %}{{ version_name }}{% endif %} {% if version_code %}(**{{ version_code }}**){% endif %} {% if package_id %}`{{ package_id }}`{% endif %}
